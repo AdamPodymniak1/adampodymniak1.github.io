@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Navier-Stokes Ziemniaka</title>
+<style>
+  html, body {
+    margin: 0;
+    background: #000;
+    overflow: hidden;
+  }
+  canvas {
+    display: block;
+  }
+  .hint {
+    position: fixed;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #fff;
+    font-family: monospace;
+    font-size: 13px;
+    opacity: 0.8;
+    background: rgba(0,0,0,0.7);
+    padding: 8px 16px;
+    border-radius: 5px;
+  }
+  #resetButton {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: rgba(0,0,0,0.7);
+    color: #fff;
+    border: 1px solid #666;
+    padding: 8px 16px;
+    border-radius: 5px;
+    font-family: monospace;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  #resetButton:hover {
+    background: rgba(50,50,50,0.7);
+  }
+  h1 {
+    color: #fff;
+    font-family: monospace;
+    font-size: 30px;
+    padding-left: 20px;
+  }
+</style>
+</head>
+<body>
+
+<h1>Navier-Stokes Fluid Simulation:</h1>
+<canvas id="canvas"></canvas>
+<button id="resetButton">Reset</button>
+
+<script>
+
+const N = 100;
+const SCALE = 8;
+const ITER = 4;
+const DIFF = 0.0001;
+const VISC = 0.0001;
+const DT = 0.1;
+
+const size = (N + 2) * (N + 2);
+
+function IX(x, y) {
+  return x + (N + 2) * y;
+}
+
+let densityR = new Float32Array(size);
+let densityG = new Float32Array(size);
+let densityB = new Float32Array(size);
+let sR = new Float32Array(size);
+let sG = new Float32Array(size);
+let sB = new Float32Array(size);
+
+let Vx = new Float32Array(size);
+let Vy = new Float32Array(size);
+
+let Vx0 = new Float32Array(size);
+let Vy0 = new Float32Array(size);
+
+let colorCycle = 0;
+
+function addSource(x, s) {
+  for (let i = 0; i < size; i++) {
+    x[i] += DT * s[i];
+  }
+}
+
+function setBnd(b, x) {
+  for (let i = 1; i <= N; i++) {
+    x[IX(0, i)] = b === 1 ? -x[IX(1, i)] : x[IX(1, i)];
+    x[IX(N+1, i)] = b === 1 ? -x[IX(N, i)] : x[IX(N, i)];
+    x[IX(i, 0)] = b === 2 ? -x[IX(i, 1)] : x[IX(i, 1)];
+    x[IX(i, N+1)] = b === 2 ? -x[IX(i, N)] : x[IX(i, N)];
+  }
+
+  x[IX(0, 0)] = 0.5 * (x[IX(1, 0)] + x[IX(0, 1)]);
+  x[IX(0, N+1)] = 0.5 * (x[IX(1, N+1)] + x[IX(0, N)]);
+  x[IX(N+1, 0)] = 0.5 * (x[IX(N, 0)] + x[IX(N+1, 1)]);
+  x[IX(N+1, N+1)] = 0.5 * (x[IX(N, N+1)] + x[IX(N+1, N)]);
+}
+
+function linSolve(b, x, x0, a, c) {
+  for (let k = 0; k < ITER; k++) {
+    for (let i = 1; i <= N; i++) {
+      for (let j = 1; j <= N; j++) {
+        x[IX(i, j)] =
+          (x0[IX(i, j)] +
+            a * (
+              x[IX(i-1, j)] +
+              x[IX(i+1, j)] +
+              x[IX(i, j-1)] +
+              x[IX(i, j+1)]
+            )) / c;
+      }
+    }
+    setBnd(b, x);
+  }
+}
+
+function diffuse(b, x, x0, diff) {
+  const a = DT * diff * N * N;
+  linSolve(b, x, x0, a, 1 + 4 * a);
+}
+
+function advect(b, d, d0, u, v) {
+  const dt0 = DT * N;
+  for (let i = 1; i <= N; i++) {
+    for (let j = 1; j <= N; j++) {
+      let x = i - dt0 * u[IX(i, j)];
+      let y = j - dt0 * v[IX(i, j)];
+
+      if (x < 0.5) x = 0.5;
+      if (x > N + 0.5) x = N + 0.5;
+      let i0 = Math.floor(x);
+      let i1 = i0 + 1;
+
+      if (y < 0.5) y = 0.5;
+      if (y > N + 0.5) y = N + 0.5;
+      let j0 = Math.floor(y);
+      let j1 = j0 + 1;
+
+      let s1 = x - i0;
+      let s0 = 1 - s1;
+      let t1 = y - j0;
+      let t0 = 1 - t1;
+
+      d[IX(i, j)] =
+        s0 * (t0 * d0[IX(i0, j0)] + t1 * d0[IX(i0, j1)]) +
+        s1 * (t0 * d0[IX(i1, j0)] + t1 * d0[IX(i1, j1)]);
+    }
+  }
+  setBnd(b, d);
+}
+
+function project(u, v, p, div) {
+  for (let i = 1; i <= N; i++) {
+    for (let j = 1; j <= N; j++) {
+      div[IX(i, j)] =
+        -0.5 * (
+          u[IX(i+1, j)] - u[IX(i-1, j)] +
+          v[IX(i, j+1)] - v[IX(i, j-1)]
+        ) / N;
+      p[IX(i, j)] = 0;
+    }
+  }
+
+  setBnd(0, div);
+  setBnd(0, p);
+  linSolve(0, p, div, 1, 4);
+
+  for (let i = 1; i <= N; i++) {
+    for (let j = 1; j <= N; j++) {
+      u[IX(i, j)] -= 0.5 * N * (p[IX(i+1, j)] - p[IX(i-1, j)]);
+      v[IX(i, j)] -= 0.5 * N * (p[IX(i, j+1)] - p[IX(i, j-1)]);
+    }
+  }
+
+  setBnd(1, u);
+  setBnd(2, v);
+}
+
+function getColor() {
+  const t = Date.now() * 0.001 + colorCycle;
+  colorCycle += 0.005;
+  const r = Math.sin(t) * 0.5 + 0.5;
+  const g = Math.sin(t + 2.094) * 0.5 + 0.5;
+  const b = Math.sin(t + 4.188) * 0.5 + 0.5;
+  return [r * 10, g * 10, b * 10];
+}
+
+function step() {
+  diffuse(1, Vx0, Vx, VISC);
+  diffuse(2, Vy0, Vy, VISC);
+  project(Vx0, Vy0, Vx, Vy);
+  advect(1, Vx, Vx0, Vx0, Vy0);
+  advect(2, Vy, Vy0, Vx0, Vy0);
+  project(Vx, Vy, Vx0, Vy0);
+  
+
+  
+  diffuse(0, sR, densityR, DIFF);
+  diffuse(0, sG, densityG, DIFF);
+  diffuse(0, sB, densityB, DIFF);
+  
+  advect(0, densityR, sR, Vx, Vy);
+  advect(0, densityG, sG, Vx, Vy);
+  advect(0, densityB, sB, Vx, Vy);
+}
+
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+canvas.width = (N + 2) * SCALE;
+canvas.height = (N + 2) * SCALE;
+
+function resetSimulation() {
+  for (let i = 0; i < size; i++) {
+    densityR[i] = 0;
+    densityG[i] = 0;
+    densityB[i] = 0;
+    Vx[i] = 0;
+    Vy[i] = 0;
+    Vx0[i] = 0;
+    Vy0[i] = 0;
+  }
+  colorCycle = 0;
+}
+
+function render() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  for (let i = 1; i <= N; i++) {
+    for (let j = 1; j <= N; j++) {
+      const r = Math.min(255, densityR[IX(i, j)] * 200);
+      const g = Math.min(255, densityG[IX(i, j)] * 200);
+      const b = Math.min(255, densityB[IX(i, j)] * 200);
+      
+      ctx.fillStyle = `rgb(${r},${g},${b})`;
+      ctx.fillRect(
+        (i - 1) * SCALE,
+        (j - 1) * SCALE,
+        SCALE,
+        SCALE
+      );
+    }
+  }
+}
+
+let mouseDown = false;
+let prevX = 0;
+let prevY = 0;
+
+canvas.addEventListener("mousedown", e => {
+  mouseDown = true;
+  prevX = e.offsetX;
+  prevY = e.offsetY;
+});
+
+canvas.addEventListener("mouseup", () => mouseDown = false);
+canvas.addEventListener("mouseleave", () => mouseDown = false);
+
+canvas.addEventListener("mousemove", e => {
+  if (!mouseDown) return;
+
+  const x = Math.floor(e.offsetX / SCALE);
+  const y = Math.floor(e.offsetY / SCALE);
+
+  const dx = e.offsetX - prevX;
+  const dy = e.offsetY - prevY;
+
+  if (x > 1 && x < N && y > 1 && y < N) {
+    Vx[IX(x, y)] += dx * 0.15;
+    Vy[IX(x, y)] += dy * 0.15;
+    
+    const color = getColor();
+    densityR[IX(x, y)] += color[0];
+    densityG[IX(x, y)] += color[1];
+    densityB[IX(x, y)] += color[2];
+    
+    for (let i = -1; i <= 1; i++) {
+      for (let j = -1; j <= 1; j++) {
+        if (x+i > 1 && x+i < N && y+j > 1 && y+j < N) {
+          const dist = Math.sqrt(i*i + j*j);
+          const falloff = Math.exp(-dist * dist * 2);
+          densityR[IX(x+i, y+j)] += color[0] * falloff;
+          densityG[IX(x+i, y+j)] += color[1] * falloff;
+          densityB[IX(x+i, y+j)] += color[2] * falloff;
+        }
+      }
+    }
+  }
+
+  prevX = e.offsetX;
+  prevY = e.offsetY;
+});
+
+document.getElementById('resetButton').addEventListener('click', resetSimulation);
+
+function loop() {
+  step();
+  render();
+  requestAnimationFrame(loop);
+}
+
+resetSimulation();
+
+loop();
+</script>
+
+</body>
+</html>
