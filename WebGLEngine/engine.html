@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adam Podymniak</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <canvas id="game"></canvas>
+    <button class="editor-toggle" id="toggleEditor">Toggle Editor</button>
+    
+    <div id="editor">
+        <h2 style="margin-bottom: 20px; color: #64b5f6;">WebGL2 Engine</h2>
+        
+        <div class="editor-section">
+            <h3>Camera</h3>
+            <div class="control-group">
+                <label>Movement Speed</label>
+                <div class="slider-with-value">
+                    <input type="range" id="cameraSpeed" min="0.1" max="10" step="0.1" value="1">
+                    <input type="number" id="cameraSpeedValue" min="0.1" max="10" step="0.1" value="1">
+                </div>
+            </div>
+            <div class="control-group">
+                <label>Mouse Sensitivity</label>
+                <div class="slider-with-value">
+                    <input type="range" id="mouseSensitivity" min="0.001" max="0.01" step="0.001" value="0.003">
+                    <input type="number" id="mouseSensitivityValue" min="0.001" max="0.01" step="0.001" value="0.003">
+                </div>
+            </div>
+            <div class="control-group">
+                <label>FOV</label>
+                <div class="slider-with-value">
+                    <input type="range" id="cameraFOV" min="30" max="120" step="1" value="45">
+                    <input type="number" id="cameraFOVValue" min="30" max="120" step="1" value="45">
+                </div>
+            </div>
+        </div>
+        
+        <div class="editor-section">
+            <h3>Post-processing</h3>
+            <div class="control-group">
+                <label>Tone Mapping</label>
+                <select id="tonemapMode">
+                    <option value="0">ACES</option>
+                    <option value="1">Filmic</option>
+                    <option value="2">Reinhard</option>
+                    <option value="3">Rom Bin Da House</option>
+                    <option value="4">Lottes</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>Exposure</label>
+                <div class="slider-with-value">
+                    <input type="range" id="exposure" min="0.1" max="5" step="0.1" value="0.5">
+                    <input type="number" id="exposureValue" min="0.1" max="5" step="0.1" value="0.5">
+                </div>
+            </div>
+            <div class="control-group">
+                <label>Gamma</label>
+                <div class="slider-with-value">
+                    <input type="range" id="gamma" min="0.1" max="3" step="0.1" value="0.6">
+                    <input type="number" id="gammaValue" min="0.1" max="3" step="0.1" value="0.6">
+                </div>
+            </div>
+            <div class="control-group">
+                <label>Anti-aliasing</label>
+                <select id="antiAliasing">
+                    <option value="none">None</option>
+                    <option value="fxaa" selected>FXAA</option>
+                    <option value="smaa">SMAA</option>
+                </select>
+            </div>
+            <div class="control-group toggle-switch">
+                <label>Depth of Field</label>
+                <input type="checkbox" id="dofEnabled">
+            </div>
+            <div class="control-group" id="dofControls">
+                <label>Focus Distance</label>
+                <div class="slider-with-value">
+                    <input type="range" id="focusDistance" min="0.1" max="20" step="0.1" value="8">
+                    <input type="number" id="focusDistanceValue" min="0.1" max="20" step="0.1" value="8">
+                </div>
+                <label>Focus Range</label>
+                <div class="slider-with-value">
+                    <input type="range" id="focusRange" min="0.1" max="10" step="0.1" value="4">
+                    <input type="number" id="focusRangeValue" min="0.1" max="10" step="0.1" value="4">
+                </div>
+                <label>Max Blur</label>
+                <div class="slider-with-value">
+                    <input type="range" id="maxBlur" min="0" max="20" step="0.1" value="8">
+                    <input type="number" id="maxBlurValue" min="0" max="20" step="0.1" value="8">
+                </div>
+                <label>Bokeh Radius</label>
+                <div class="slider-with-value">
+                    <input type="range" id="bokehRadius" min="1" max="20" step="1" value="8">
+                    <input type="number" id="bokehRadiusValue" min="1" max="20" step="1" value="8">
+                </div>
+            </div>
+            <div class="control-group toggle-switch">
+                <label>Cel Shading</label>
+                <input type="checkbox" id="celShadingEnabled">
+            </div>
+            <div class="control-group" id="celShadingControls">
+                <label>Color Levels</label>
+                <div class="slider-with-value">
+                    <input type="range" id="celLevels" min="2" max="20" step="1" value="12">
+                    <input type="number" id="celLevelsValue" min="2" max="20" step="1" value="12">
+                </div>
+                <label>Edge Threshold</label>
+                <div class="slider-with-value">
+                    <input type="range" id="celEdgeThreshold" min="0.1" max="1" step="0.1" value="0.3">
+                    <input type="number" id="celEdgeThresholdValue" min="0.1" max="1" step="0.1" value="0.3">
+                </div>
+            </div>
+        </div>
+        
+        <div class="editor-section">
+            <h3>Lighting</h3>
+            <div class="control-group">
+                <label>Sun Direction</label>
+                <div class="vector-controls">
+                    <input type="number" id="sunDirX" step="0.1" value="3" placeholder="X">
+                    <input type="number" id="sunDirY" step="0.1" value="-2" placeholder="Y">
+                    <input type="number" id="sunDirZ" step="0.1" value="-3" placeholder="Z">
+                </div>
+            </div>
+            <div class="control-group">
+                <label>Sun Color</label>
+                <div class="color-picker">
+                    <input type="color" id="sunColor" value="#a9a9a9">
+                    <input type="text" id="sunColorHex" value="#a9a9a9" readonly>
+                </div>
+            </div>
+            <div class="control-group">
+                <label>Room Light Position</label>
+                <div class="vector-controls">
+                    <input type="number" id="roomLightX" step="0.1" value="3" placeholder="X">
+                    <input type="number" id="roomLightY" step="0.1" value="1" placeholder="Y">
+                    <input type="number" id="roomLightZ" step="0.1" value="-2" placeholder="Z">
+                </div>
+            </div>
+            <div class="control-group">
+                <label>Room Light Color</label>
+                <div class="color-picker">
+                    <input type="color" id="roomLightColor" value="#80ff80">
+                    <input type="text" id="roomLightColorHex" value="#80ff80" readonly>
+                </div>
+            </div>
+        </div>
+        
+        <div class="editor-section">
+            <h3>Scene Objects</h3>
+            <div id="objectList">
+            </div>
+            <button id="addObject">Add New Object</button>
+        </div>
+        
+        <div class="editor-section">
+            <h3>Selected Object</h3>
+            <div id="objectProperties">
+                <div class="control-group">
+                    <label>Name</label>
+                    <input type="text" id="objName" value="" placeholder="Object name">
+                </div>
+                <div class="control-group">
+                    <label>Position</label>
+                    <div class="vector-controls">
+                        <input type="number" id="objPosX" step="0.1" value="0" placeholder="X">
+                        <input type="number" id="objPosY" step="0.1" value="0" placeholder="Y">
+                        <input type="number" id="objPosZ" step="0.1" value="0" placeholder="Z">
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label>Rotation (radians)</label>
+                    <div class="vector-controls">
+                        <input type="number" id="objRotX" step="0.1" value="0" placeholder="X">
+                        <input type="number" id="objRotY" step="0.1" value="0" placeholder="Y">
+                        <input type="number" id="objRotZ" step="0.1" value="0" placeholder="Z">
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label>Scale</label>
+                    <div class="vector-controls">
+                        <input type="number" id="objScaleX" step="0.1" value="1" placeholder="X">
+                        <input type="number" id="objScaleY" step="0.1" value="1" placeholder="Y">
+                        <input type="number" id="objScaleZ" step="0.1" value="1" placeholder="Z">
+                    </div>
+                </div>
+                <button id="updateObject">Update Object</button>
+                <button id="deleteObject" style="background: #f44336;">Delete Object</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/gl-matrix@3.4.3/gl-matrix-min.js"></script>
+    <script type="module" src="src/main.js"></script>
+</body>
+</html>
