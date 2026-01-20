@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Interaktywne Laboratorium Fizyki Kwantowej</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1100px;
+      margin: auto;
+      padding: 20px;
+      background: #0d1117;
+      color: #e6edf3;
+    }
+    h2 { color: #58a6ff; }
+    .tool {
+      border: 1px solid #30363d;
+      padding: 15px;
+      margin-bottom: 25px;
+      border-radius: 8px;
+      background: #161b22;
+    }
+    canvas {
+      background: white;
+      border: 1px solid gray;
+      margin-top: 10px;
+    }
+    input[type="range"] {
+      width: 250px;
+    }
+    details summary {
+      cursor: pointer;
+      font-weight: bold;
+      margin-top: 10px;
+      margin-bottom: 5px;
+    }
+    details p {
+      margin: 5px 0 0 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>Interaktywne Laboratorium Fizyki Kwantowej</h1>
+
+  <!-- 1. Wavelength → Energy -->
+  <div class="tool">
+    <h2>Kalkulator: Długość fali -> Energia</h2>
+    <label>Długość fali (nm): <span id="wlVal">500</span></label><br>
+    <input type="range" id="wl" min="100" max="2000" value="500" />
+    <p id="energy"></p>
+    
+    <details>
+      <summary>Opis eksperymentu</summary>
+      <p>Oblicza energię fotonu dla wybranej długości fali według wzoru E = hc/λ. Możesz przesuwać suwak, aby zobaczyć jak zmienia się energia w eV.</p>
+    </details>
+  </div>
+
+  <!-- 2. Atomic Spectral Line Lookup -->
+  <div class="tool">
+    <h2>Wyszukiwanie Linii Spektralnych Atomów</h2>
+    <label>Długość fali (nm):</label><br>
+    <input type="range" id="spec" min="350" max="750" value="500" />
+    <span id="specVal">500</span>
+    <p id="specResult"></p>
+    
+    <details>
+      <summary>Opis eksperymentu</summary>
+      <p>Porównuje wybraną długość fali z charakterystycznymi liniami spektralnymi wodoru i helu. Pokazuje dopasowania w widmie atomowym.</p>
+    </details>
+  </div>
+
+  <!-- 3. Heisenberg Uncertainty -->
+  <div class="tool">
+    <h2>Symulator Zasady Nieoznaczoności Heisenberga</h2>
+    <label>Δx (nm): <span id="dxVal">10</span></label><br>
+    <input type="range" id="dx" min="1" max="1000" value="10" />
+    <p id="uncertainty"></p>
+
+    <details>
+      <summary>Opis eksperymentu</summary>
+      <p>Pokazuje minimalną niepewność pędu dla wybranej niepewności położenia Δx zgodnie z zasadą Heisenberga: Δp ≥ ħ/(2Δx).</p>
+    </details>
+  </div>
+
+  <!-- 4. Quantum RNG -->
+  <div class="tool">
+    <h2>Kwantowy Generator Liczb Losowych (symulacja)</h2>
+    <label>Prawdopodobieństwo 1 (%): <span id="probVal">50</span></label><br>
+    <input type="range" id="prob" min="0" max="100" value="50" />
+    <button onclick="randBit()">Generuj</button>
+    <p id="rngOut"></p>
+    
+    <details>
+      <summary>Opis eksperymentu</summary>
+      <p>Symuluje generator kwantowy losowych bitów. Ustaw procentową szansę wylosowania 1, a następnie kliknij „Generuj”.</p>
+    </details>
+  </div>
+
+  <!-- 5. Particle in a Box -->
+  <div class="tool">
+    <h2>Funkcja falowa cząstki w pudełku (1D)</h2>
+    <label>Liczba kwantowa n: <span id="nVal">1</span></label><br>
+    <input type="range" id="n" min="1" max="10" value="1" />
+    <canvas id="box" width="500" height="180"></canvas>
+    
+    <details>
+      <summary>Opis eksperymentu</summary>
+      <p>Rysuje funkcję falową cząstki w jednym wymiarze dla wybranego poziomu kwantowego n. Pokazuje jak zmienia się kształt funkcji falowej wraz ze wzrostem n.</p>
+    </details>
+  </div>
+
+  <!-- 6. Double-Slit Interference -->
+  <div class="tool">
+    <h2>Symulator Interferencji Dwóch Szczelin</h2>
+    <label>Długość fali (nm): <span id="dsWVal">600</span></label><br>
+    <input type="range" id="dsW" min="300" max="800" value="600" />
+    <canvas id="ds" width="500" height="180"></canvas>
+    
+    <details>
+      <summary>Opis eksperymentu</summary>
+      <p>Symuluje interferencję światła przy przejściu przez dwie szczeliny. Zmiana długości fali powoduje przesunięcie prążków interferencyjnych.</p>
+    </details>
+  </div>
+
+  <!-- 7. Quantum Tunneling -->
+  <div class="tool">
+    <h2>Prawdopodobieństwo Tunelowania Kwantowego</h2>
+    <label>Szerokość bariery (nm): <span id="bwVal">1</span></label><br>
+    <input type="range" id="bw" min="1" max="50" value="1" />
+    <p id="tunnel"></p>
+    
+    <details>
+      <summary>Opis eksperymentu</summary>
+      <p>Pokazuje szacowane prawdopodobieństwo tunelowania kwantowego przez barierę o wybranej szerokości. Im węższa bariera, tym większe prawdopodobieństwo tunelowania.</p>
+    </details>
+  </div>
+
+  <!-- 8. Harmonic Oscillator -->
+  <div class="tool">
+    <h2>Stany własne oscylatora harmonicznego</h2>
+    <label>Liczba kwantowa n: <span id="hoVal">0</span></label><br>
+    <input type="range" id="ho" min="0" max="5" value="0" />
+    <canvas id="hoCanvas" width="500" height="180"></canvas>
+    
+    <details>
+      <summary>Opis eksperymentu</summary>
+      <p>Rysuje funkcje falowe dla oscylatora harmonicznego w wybranym stanie kwantowym n. Pozwala zobaczyć kształt stanów własnych w różnych poziomach energii.</p>
+    </details>
+  </div>
+
+<script>
+const h = 6.626e-34, c = 3e8, e = 1.602e-19, hbar = 1.055e-34;
+
+wl.oninput = () => {
+  wlVal.textContent = wl.value;
+  let E = (h * c) / (wl.value * 1e-9);
+  energy.textContent = `Energia = ${(E / e).toFixed(2)} eV`;
+};
+wl.oninput();
+
+const lines = { Hydrogen: [410,434,486,656], Helium: [388,447,501,587] };
+spec.oninput = () => {
+  specVal.textContent = spec.value;
+  let wl = spec.value;
+  let found = [];
+  for (let atom in lines) lines[atom].forEach(v => {
+    if(Math.abs(v-wl)<2) found.push(`${atom} (${v} nm)`);
+  });
+  specResult.textContent = found.length ? found.join(", ") : "Brak dopasowania";
+};
+spec.oninput();
+
+dx.oninput = () => {
+  dxVal.textContent = dx.value;
+  let dxm = dx.value * 1e-9;
+  let dp = hbar / (2 * dxm);
+  uncertainty.textContent = `Minimalna niepewność pędu: ${(dp).toExponential(3)} kg·m/s`;
+};
+dx.oninput();
+
+function randBit() {
+  let p = prob.value / 100;
+  probVal.textContent = prob.value;
+  rngOut.textContent = Math.random() < p ? "1" : "0";
+}
+
+function boxDraw() {
+  let ctx = box.getContext("2d");
+  ctx.clearRect(0,0,500,180);
+  let n = parseInt(document.getElementById("n").value);
+  nVal.textContent = n;
+  for(let x=0;x<500;x++){
+    let y = Math.sin((n*Math.PI*x)/500);
+    ctx.fillRect(x, 90 - y*80, 2, 2);
+  }
+}
+n.oninput = boxDraw;
+boxDraw();
+
+function drawDS() {
+  let ctx = ds.getContext("2d");
+  ctx.clearRect(0,0,500,180);
+  let lambda = dsW.value * 1e-9;
+  dsWVal.textContent = dsW.value;
+  for(let x=0;x<500;x++){
+    let I = Math.cos((Math.PI*x*1e-6)/lambda);
+    let y = (I*I)*180;
+    ctx.fillRect(x,180-y,1,1);
+  }
+}
+dsW.oninput = drawDS;
+drawDS();
+
+bw.oninput = () => {
+  let w = bw.value * 1e-9;
+  bwVal.textContent = bw.value;
+  let k = 1e10;
+  let T = Math.exp(-2*k*w);
+  tunnel.textContent = `Prawdopodobieństwo tunelowania ≈ ${T.toExponential(3)}`;
+};
+bw.oninput();
+
+function drawHO() {
+  let ctx = hoCanvas.getContext("2d");
+  ctx.clearRect(0,0,500,180);
+  let n = parseInt(ho.value);
+  hoVal.textContent = n;
+  for(let x=0;x<500;x++){
+    let xm = (x-250)/80;
+    let y = Math.exp(-xm*xm/2)*hermite(n,xm);
+    ctx.fillRect(x,90-y*40,2,2);
+  }
+}
+function hermite(n,x){ if(n===0) return 1; if(n===1) return 2*x; return 2*x*hermite(n-1,x)-2*(n-1)*hermite(n-2,x);}
+ho.oninput = drawHO;
+drawHO();
+</script>
+</body>
+</html>

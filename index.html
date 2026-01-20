@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Adam Podymniak</title>
+<style>
+html, body {
+  margin:0;
+  padding:0;
+  background: #050516;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+  color: #dce7ff;
+}
+
+*::-webkit-scrollbar {
+  display: none;
+}
+
+.wrap {
+  width: 100%;
+  height: 100vh;
+  margin: 0;
+  margin-top: -10vh;
+  padding: 0;
+  position: relative;
+}
+
+.label {
+  position: absolute;
+  top: 28%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-weight: 700;
+  font-size: clamp(20px, 3.7vw, 36px);
+  text-align: center;
+  text-shadow: 0 0 12px #fff;
+  pointer-events: none;
+  max-width: 90vw;
+  line-height: 1.2em;
+}
+
+.bottom-section {
+  position: relative;
+  margin-top: -35vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding-bottom: 32px;
+  pointer-events: auto;
+}
+
+.wave-container {
+  width: 100%;
+  height: 140px;
+}
+
+.links {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 60px;
+}
+
+.box {
+  padding: 16px 26px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.07);
+  color: #eaf1ff;
+  font-size: 20px;
+  text-decoration: none;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.12);
+  display: inline-flex; 
+  align-items: center; 
+  justify-content: center;
+  text-align: center;
+  white-space: normal;
+  min-width: 120px;
+  transition: 0.25s;
+}
+.box:hover {
+  transform: translateY(-4px);
+  background: rgba(255,255,255,0.15);
+  box-shadow: 0 4px 18px rgba(255,255,255,0.2);
+}
+
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="label">PROGRAMISTA I STUDENT AGH</div>
+  <canvas id="c"></canvas>
+  <div class="bottom-section">
+    <div class="wave-container" id="wave"></div>
+    <div class="links">
+      <a href="#" class="box">Programowanie</a>
+      <a href="#" class="box">Mechanika Kwantowa</a>
+      <a href="#" class="box">Inne</a>
+    </div>
+  </div>
+</div>
+
+<script>
+const FIXED_TEXT="ADAM PODYMNIAK";
+
+(() => {
+const canvas=document.getElementById('c');
+const ctx=canvas.getContext('2d',{alpha:true});
+const off=document.createElement('canvas');
+const offCtx=off.getContext('2d');
+let DPR=Math.max(1,window.devicePixelRatio||1);
+
+const config={sample:6,particleSize:2.5,spring:0.12,friction:0.82,backgroundClearAlpha:0.12,maxParticles:2500,textFontBase:'900',textFamily:'Inter, system-ui'};
+
+let particles=[],targets=[],mouse={x:-9999,y:-9999,down:false};
+
+function resize(){
+  DPR=Math.max(1,window.devicePixelRatio||1);
+  canvas.width=Math.floor(innerWidth*DPR);
+  canvas.height=Math.floor(innerHeight*DPR);
+  canvas.style.width=innerWidth+'px';
+  canvas.style.height=innerHeight-10+'px';
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  off.width=Math.floor(innerWidth*0.9*DPR);
+  off.height=Math.floor(innerHeight*0.5*DPR);
+  regenerateParticles(FIXED_TEXT);
+  createWaveGraphics();
+}
+
+function sampleTextPoints(text){
+  const w=off.width,h=off.height;
+  offCtx.clearRect(0,0,w,h);
+  let fontSize=Math.floor(h*0.9);
+  offCtx.textBaseline='middle';
+  offCtx.textAlign='center';
+  offCtx.fillStyle='#fff';
+  offCtx.font=`${config.textFontBase} ${fontSize}px ${config.textFamily}`;
+  const maxW=w*0.95;
+  while(fontSize>8 && offCtx.measureText(text).width>maxW){
+    fontSize=Math.floor(fontSize*0.94);
+    offCtx.font=`${config.textFontBase} ${fontSize}px ${config.textFamily}`;
+  }
+  const x=w/2,y=h/2+fontSize*0.03;
+  offCtx.clearRect(0,0,w,h);
+  offCtx.fillStyle='#fff';
+  offCtx.fillText(text,x,y);
+  const img=offCtx.getImageData(0,0,w,h).data;
+  const points=[];
+  for(let py=0;py<h;py+=config.sample){
+    for(let px=0;px<w;px+=config.sample){
+      if(img[(py*w+px)*4+3]>128){
+        const cx=(innerWidth-(w/DPR))/2+(px/DPR);
+        const cy=(innerHeight-(h/DPR))/2+(py/DPR);
+        points.push({x:cx,y:cy});
+      }
+    }
+  }
+  return points;
+}
+
+function regenerateParticles(text){
+  targets=sampleTextPoints(text);
+  if(targets.length>config.maxParticles){
+    const reduced=[];
+    const step=Math.ceil(targets.length/config.maxParticles);
+    for(let i=0;i<targets.length;i+=step) reduced.push(targets[i]);
+    targets=reduced;
+  }
+  particles=[];
+  const sx=innerWidth/2,sy=innerHeight/2;
+  for(const t of targets){
+    particles.push({
+      x:sx,y:sy,sx:sx,sy:sy,vx:0,vy:0,tx:t.x,ty:t.y,
+      size:config.particleSize,delay:Math.random()*700,
+      startTime:performance.now(),maxDist:Math.hypot(sx-t.x,sy-t.y)
+    });
+  }
+}
+
+let lastTime=performance.now();
+function animate(now){
+  requestAnimationFrame(animate);
+  if(!now) now=performance.now();
+  const dt=Math.min(34,now-lastTime);
+  lastTime=now;
+
+  ctx.fillStyle=`rgba(7,12,24,${config.backgroundClearAlpha})`;
+  ctx.fillRect(0,0,innerWidth,innerHeight);
+
+  const repelRadius=120;
+  const repelRadiusSq=repelRadius*repelRadius;
+  const repelStrength=9000;
+
+  for(const p of particles){
+    const age=now-p.startTime;
+    if(age<p.delay){drawParticle(p.x,p.y,p.size*0.6,'rgba(255,255,255,0.15)');continue;}
+
+    const dx=p.tx-p.x,dy=p.ty-p.y;
+    p.vx+=dx*config.spring*(dt/16.67);
+    p.vy+=dy*config.spring*(dt/16.67);
+
+    const mdx=p.x-mouse.x,mdy=p.y-mouse.y,md2=mdx*mdx+mdy*mdy;
+    if(mouse.x>-1000 && md2<repelRadiusSq){
+      const force=(repelRadiusSq-md2)/repelRadiusSq;
+      const dist=Math.sqrt(md2)+0.001;
+      const k=mouse.down?1.6:1;
+      p.vx+=(mdx/dist)*force*repelStrength*k*0.02*(dt/16.67);
+      p.vy+=(mdy/dist)*force*repelStrength*k*0.02*(dt/16.67);
+    }
+
+    p.vx*=Math.pow(config.friction,dt/16.67);
+    p.vy*=Math.pow(config.friction,dt/16.67);
+    p.x+=p.vx*(dt/16.67);
+    p.y+=p.vy*(dt/16.67);
+
+    const distToTarget=Math.hypot(p.x-p.tx,p.y-p.ty);
+    let t=Math.min(1,distToTarget/p.maxDist),inv=1-t;
+    const r=255,g=Math.floor(255*inv),b=Math.floor(255*inv);
+    drawParticle(p.x,p.y,p.size,`rgb(${r},${g},${b})`);
+  }
+}
+
+function drawParticle(x,y,r,c){
+  ctx.beginPath();
+  ctx.arc(x,y,r,0,Math.PI*2);
+  ctx.fillStyle=c;
+  ctx.fill();
+}
+
+function onPointerMove(e){
+  const rect=canvas.getBoundingClientRect();
+  const cx=e.clientX ?? (e.touches && e.touches[0]?.clientX) ?? -9999;
+  const cy=e.clientY ?? (e.touches && e.touches[0]?.clientY) ?? -9999;
+  mouse.x=cx-rect.left;
+  mouse.y=cy-rect.top;
+}
+function onPointerDown(e){ mouse.down=true; onPointerMove(e); }
+function onPointerUp(){ mouse.down=false; setTimeout(()=>{if(!mouse.down){mouse.x=-9999; mouse.y=-9999;}},400); }
+
+window.addEventListener('mousemove', onPointerMove);
+window.addEventListener('mousedown', onPointerDown);
+window.addEventListener('mouseup', onPointerUp);
+window.addEventListener('touchmove', onPointerMove, {passive:false});
+window.addEventListener('touchstart', onPointerDown, {passive:false});
+window.addEventListener('touchend', onPointerUp, {passive:false});
+
+function onPointerMove(e){
+  const rect = canvas.getBoundingClientRect();
+  const cx = e.clientX ?? (e.touches && e.touches[0]?.clientX) ?? -9999;
+  const cy = e.clientY ?? (e.touches && e.touches[0]?.clientY) ?? -9999;
+  mouse.x = cx - rect.left;
+  mouse.y = cy - rect.top;
+}
+
+function createWaveGraphics(){
+  const waveContainer=document.getElementById('wave');
+  waveContainer.innerHTML='';
+  const waveCanvas=document.createElement('canvas');
+  waveCanvas.width=innerWidth;
+  waveCanvas.height=140;
+  waveCanvas.style.width='100%';
+  waveCanvas.style.height='140px';
+  waveContainer.appendChild(waveCanvas);
+  const wctx=waveCanvas.getContext('2d');
+  let t=0;
+  const packetWidth=0.07;
+  const kReal=18;
+  const kImag=22;
+  const driftSpeed=0.07;
+
+  function drawWave(){
+    t+=0.01;
+    wctx.clearRect(0,0,waveCanvas.width,waveCanvas.height);
+    const steps=320;
+    for(let i=0;i<steps;i++){
+      const n=i/steps;
+      const x=n*waveCanvas.width;
+      const u=n-0.5;
+      const envelope=Math.exp(-(u*u)/packetWidth);
+      const real=envelope*Math.cos(kReal*n*10-t*driftSpeed*40)*50;
+      const imag=envelope*Math.sin(kImag*n*10-t*driftSpeed*40)*50;
+      wctx.beginPath();
+      wctx.arc(x,70+real,2.2,0,Math.PI*2);
+      wctx.fillStyle="rgba(0,255,255,0.65)";
+      wctx.fill();
+      wctx.beginPath();
+      wctx.arc(x,70+imag,2.2,0,Math.PI*2);
+      wctx.fillStyle="rgba(255,0,255,0.65)";
+      wctx.fill();
+    }
+    requestAnimationFrame(drawWave);
+  }
+  requestAnimationFrame(drawWave);
+}
+
+resize();
+animate();
+window.addEventListener('resize',resize);
+})();
+</script>
+</body>
+</html>
