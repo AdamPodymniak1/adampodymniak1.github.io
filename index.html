@@ -11,17 +11,14 @@ html, body {
   background:#050516;
   font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
   color:#dce7ff;
-  height:100%;
-  overscroll-behavior:none;
 }
 
 *::-webkit-scrollbar { display:none; }
 
 .wrap {
   width:100%;
-  height:100svh;
+  min-height:100svh;
   position:relative;
-  overflow:hidden;
 }
 
 canvas {
@@ -30,7 +27,7 @@ canvas {
 
 .label {
   position:absolute;
-  top:28%;
+  top:10%;
   left:50%;
   transform:translateX(-50%);
   font-weight:700;
@@ -44,17 +41,17 @@ canvas {
 
 .bottom-section {
   position:absolute;
-  bottom:0;
+  top:45%;
   width:100%;
   display:flex;
   flex-direction:column;
   align-items:center;
-  padding-bottom:24px;
+  padding-bottom:16px;
 }
 
 .wave-container {
   width:100%;
-  height:120px;
+  height:110px;
 }
 
 .links {
@@ -62,7 +59,7 @@ canvas {
   gap:16px;
   flex-wrap:wrap;
   justify-content:center;
-  margin-top:40px;
+  margin-top:28px;
   padding:0 12px;
 }
 
@@ -87,6 +84,7 @@ canvas {
   background:rgba(255,255,255,0.15);
   box-shadow:0 4px 18px rgba(255,255,255,0.2);
 }
+
 </style>
 </head>
 <body>
@@ -114,7 +112,10 @@ const canvas=document.getElementById("c");
 const ctx=canvas.getContext("2d",{alpha:true});
 const off=document.createElement("canvas");
 const offCtx=off.getContext("2d");
+
 let DPR=1;
+let particles=[],targets=[];
+let mouse={x:-9999,y:-9999,down:false};
 
 const config={
   sample:6,
@@ -122,25 +123,27 @@ const config={
   spring:0.12,
   friction:0.82,
   backgroundClearAlpha:0.12,
-  maxParticles:2200,
   textFontBase:"900",
-  textFamily:"Inter, system-ui"
+  textFamily:"Inter, system-ui",
+  maxParticles:2400
 };
 
-let particles=[],targets=[];
-let mouse={x:-9999,y:-9999,down:false};
-
 function resize(){
-  DPR=Math.max(1,window.devicePixelRatio||1);
-  const w=window.innerWidth;
-  const h=window.innerHeight;
+  DPR=Math.max(1,devicePixelRatio||1);
+  const w=innerWidth;
+  const h=innerHeight;
   canvas.width=w*DPR;
   canvas.height=h*DPR;
   canvas.style.width=w+"px";
   canvas.style.height=h+"px";
   ctx.setTransform(DPR,0,0,DPR,0,0);
+
   off.width=w*0.9*DPR;
-  off.height=h*0.45*DPR;
+  off.height=h*0.38*DPR;
+
+  const density=Math.max(1,900/w);
+  config.maxParticles=Math.floor(2400*density);
+
   regenerateParticles(FIXED_TEXT);
   createWaveGraphics();
 }
@@ -153,8 +156,7 @@ function sampleTextPoints(text){
   offCtx.textAlign="center";
   offCtx.fillStyle="#fff";
   offCtx.font=`${config.textFontBase} ${fontSize}px ${config.textFamily}`;
-  const maxW=w*0.95;
-  while(fontSize>10 && offCtx.measureText(text).width>maxW){
+  while(fontSize>10 && offCtx.measureText(text).width>w*0.95){
     fontSize*=0.94;
     offCtx.font=`${config.textFontBase} ${fontSize}px ${config.textFamily}`;
   }
@@ -165,13 +167,19 @@ function sampleTextPoints(text){
     for(let x=0;x<w;x+=config.sample){
       if(img[(y*w+x)*4+3]>128){
         pts.push({
-          x:(window.innerWidth-(w/DPR))/2+(x/DPR),
-          y:(window.innerHeight-(h/DPR))/2+(y/DPR)
+          x:(innerWidth-(w/DPR))/2+(x/DPR),
+          y: particleBaseY() + (y / DPR)
         });
       }
     }
   }
   return pts;
+}
+
+function particleBaseY() {
+  if (innerWidth < 480) return innerHeight * 0.12;
+  if (innerWidth < 768) return innerHeight * 0.14;
+  return innerHeight * 0.18;
 }
 
 function regenerateParticles(text){
@@ -181,7 +189,7 @@ function regenerateParticles(text){
     targets=targets.filter((_,i)=>i%step===0);
   }
   particles=[];
-  const cx=innerWidth/2,cy=innerHeight/2;
+  const cx = innerWidth / 2, cy = particleBaseY();
   for(const t of targets){
     particles.push({
       x:cx,y:cy,vx:0,vy:0,
@@ -223,8 +231,7 @@ function animate(now){
     p.x+=p.vx*(dt/16.67);
     p.y+=p.vy*(dt/16.67);
     const t=Math.min(1,Math.hypot(p.x-p.tx,p.y-p.ty)/p.maxDist);
-    const c=`rgb(255,${255*(1-t)},${255*(1-t)})`;
-    draw(p.x,p.y,p.size,c);
+    draw(p.x,p.y,p.size,`rgb(255,${255*(1-t)},${255*(1-t)})`);
   }
 }
 
@@ -252,9 +259,9 @@ function createWaveGraphics(){
   const wc=document.createElement("canvas");
   const dpr=Math.max(1,devicePixelRatio||1);
   wc.width=innerWidth*dpr;
-  wc.height=120*dpr;
+  wc.height=110*dpr;
   wc.style.width="100%";
-  wc.style.height="120px";
+  wc.style.height="110px";
   c.appendChild(wc);
   const wctx=wc.getContext("2d");
   wctx.setTransform(dpr,0,0,dpr,0,0);
@@ -262,16 +269,16 @@ function createWaveGraphics(){
   function drawWave(){
     t+=0.01;
     wctx.clearRect(0,0,wc.width,wc.height);
-    for(let i=0;i<280;i++){
-      const n=i/280;
+    for(let i=0;i<260;i++){
+      const n=i/260;
       const x=n*innerWidth;
       const env=Math.exp(-((n-0.5)**2)/0.09);
-      const r=env*Math.cos(18*n*10-t*3)*38;
-      const im=env*Math.sin(22*n*10-t*3)*38;
+      const r=env*Math.cos(18*n*10-t*3)*34;
+      const im=env*Math.sin(22*n*10-t*3)*34;
       wctx.fillStyle="rgba(0,255,255,0.65)";
-      wctx.beginPath();wctx.arc(x,60+r,2,0,7);wctx.fill();
+      wctx.beginPath();wctx.arc(x,55+r,2,0,7);wctx.fill();
       wctx.fillStyle="rgba(255,0,255,0.65)";
-      wctx.beginPath();wctx.arc(x,60+im,2,0,7);wctx.fill();
+      wctx.beginPath();wctx.arc(x,55+im,2,0,7);wctx.fill();
     }
     requestAnimationFrame(drawWave);
   }
