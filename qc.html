@@ -1,1 +1,232 @@
-TODO
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Quantum Circuit Visualizer</title>
+<style>
+body {
+  font-family: system-ui, sans-serif;
+  background: #0f1220;
+  color: #eee;
+  margin: 0;
+  padding: 0;
+}
+
+header {
+  padding: 12px;
+  background: #181c3a;
+  text-align: center;
+  font-weight: bold;
+}
+
+.container {
+  display: flex;
+  height: calc(100vh - 50px);
+}
+
+.palette {
+  width: 160px;
+  background: #14172f;
+  padding: 10px;
+  border-right: 1px solid #333;
+}
+
+.gate {
+  background: #2d34ff;
+  margin: 8px 0;
+  padding: 8px;
+  text-align: center;
+  border-radius: 6px;
+  cursor: grab;
+}
+
+.circuit {
+  flex: 1;
+  padding: 20px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.wire {
+  height: 2px;
+  background: #888;
+  flex: 1;
+}
+
+.slot {
+  width: 48px;
+  height: 48px;
+  border: 2px dashed #555;
+  margin: 0 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.slot.filled {
+  border-style: solid;
+}
+
+button {
+  background: #2dff9a;
+  border: none;
+  padding: 10px 16px;
+  font-size: 16px;
+  margin: 10px;
+  cursor: pointer;
+}
+
+pre {
+  background: #111;
+  padding: 10px;
+  overflow: auto;
+}
+</style>
+</head>
+<body>
+
+<header>Quantum Circuit Visualizer (Drag & Drop)</header>
+
+<div class="container">
+  <div class="palette">
+    <div class="gate" draggable="true" data-gate="H">H</div>
+    <div class="gate" draggable="true" data-gate="X">X</div>
+    <div class="gate" draggable="true" data-gate="Z">Z</div>
+    <div class="gate" draggable="true" data-gate="CNOT">CNOT</div>
+  </div>
+
+  <div class="circuit">
+    <div class="row" data-qubit="0">
+      q0
+      <div class="slot"></div>
+      <div class="wire"></div>
+    </div>
+    <div class="row" data-qubit="1">
+      q1
+      <div class="slot"></div>
+      <div class="wire"></div>
+    </div>
+
+    <button onclick="runCircuit()">Run Circuit</button>
+    <pre id="output"></pre>
+  </div>
+</div>
+
+<script>
+function c(re, im = 0) { return { re, im }; }
+function add(a, b) { return c(a.re + b.re, a.im + b.im); }
+function mul(a, b) {
+  return c(
+    a.re * b.re - a.im * b.im,
+    a.re * b.im + a.im * b.re
+  );
+}
+function abs2(a) { return a.re * a.re + a.im * a.im; }
+
+const GATES = {
+  H: [
+    [c(1/Math.sqrt(2)), c(1/Math.sqrt(2))],
+    [c(1/Math.sqrt(2)), c(-1/Math.sqrt(2))]
+  ],
+  X: [
+    [c(0), c(1)],
+    [c(1), c(0)]
+  ],
+  Z: [
+    [c(1), c(0)],
+    [c(0), c(-1)]
+  ]
+};
+
+class QuantumCircuit {
+  constructor(n) {
+    this.n = n;
+    this.dim = 1 << n;
+    this.state = Array(this.dim).fill(c(0));
+    this.state[0] = c(1);
+  }
+
+  applyGate(gate, target) {
+    const newState = Array(this.dim).fill(c(0));
+    for (let i = 0; i < this.dim; i++) {
+      const bit = (i >> target) & 1;
+      for (let b = 0; b < 2; b++) {
+        const j = (i & ~(1 << target)) | (b << target);
+        newState[i] = add(
+          newState[i],
+          mul(gate[bit][b], this.state[j])
+        );
+      }
+    }
+    this.state = newState;
+  }
+
+  applyCNOT(control, target) {
+    const newState = [...this.state];
+    for (let i = 0; i < this.dim; i++) {
+      if (((i >> control) & 1) === 1) {
+        const j = i ^ (1 << target);
+        newState[j] = this.state[i];
+      }
+    }
+    this.state = newState;
+  }
+
+  measure(shots = 256) {
+    const probs = this.state.map(abs2);
+    const counts = {};
+    for (let s = 0; s < shots; s++) {
+      let r = Math.random();
+      let acc = 0;
+      for (let i = 0; i < probs.length; i++) {
+        acc += probs[i];
+        if (r < acc) {
+          const b = i.toString(2).padStart(this.n, "0");
+          counts[b] = (counts[b] || 0) + 1;
+          break;
+        }
+      }
+    }
+    return counts;
+  }
+}
+
+let draggedGate = null;
+
+document.querySelectorAll(".gate").forEach(g => {
+  g.addEventListener("dragstart", e => {
+    draggedGate = e.target.dataset.gate;
+  });
+});
+
+document.querySelectorAll(".slot").forEach(slot => {
+  slot.addEventListener("dragover", e => e.preventDefault());
+  slot.addEventListener("drop", e => {
+    slot.textContent = draggedGate;
+    slot.classList.add("filled");
+    slot.dataset.gate = draggedGate;
+  });
+});
+
+function runCircuit() {
+  const qc = new QuantumCircuit(2);
+  document.querySelectorAll(".row").forEach(row => {
+    const q = +row.dataset.qubit;
+    const slot = row.querySelector(".slot");
+    if (!slot.dataset.gate) return;
+
+    const g = slot.dataset.gate;
+    if (g === "CNOT") qc.applyCNOT(0, 1);
+    else qc.applyGate(GATES[g], q);
+  });
+
+  document.getElementById("output").textContent =
+    JSON.stringify(qc.measure(), null, 2);
+}
+</script>
+</body>
+</html>
