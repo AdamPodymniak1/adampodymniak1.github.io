@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Symulator Obwodów Kwantowych</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <span>Symulator Obwodów Kwantowych</span>
+  <div class="header-controls">
+    <span>Pomiarów:</span>
+    <input type="number" id="shotsInput" value="1024" min="1" max="10000">
+    <span>Kubity:</span>
+    <input type="number" id="qubitsInput" value="2" min="1" max="10">
+    <button onclick="updateQubitCount()">Updateuj</button>
+  </div>
+</header>
+
+<div class="app">
+  <div class="sidebar">
+    <div class="palette-section">
+      <h3>Bramki Podstawowe</h3>
+      <div class="gate" draggable="true" data-gate="H">H</div>
+      <div class="gate" draggable="true" data-gate="X">X</div>
+      <div class="gate" draggable="true" data-gate="Y">Y</div>
+      <div class="gate" draggable="true" data-gate="Z">Z</div>
+      <div class="gate" draggable="true" data-gate="S">S</div>
+      <div class="gate" draggable="true" data-gate="T">T</div>
+    </div>
+    
+    <div class="palette-section">
+      <h3>Bramki Kontrolowane</h3>
+      <div class="gate control" draggable="true" data-gate="CNOT">●─X</div>
+      <div class="gate control" draggable="true" data-gate="CY">●─Y</div>
+      <div class="gate control" draggable="true" data-gate="CZ">●─Z</div>
+      <div class="gate control" draggable="true" data-gate="CCX">●●─X</div>
+    </div>
+    
+    <div class="palette-section">
+      <h3>Inne Bramki</h3>
+      <div class="gate multi" draggable="true" data-gate="SWAP">SWAP</div>
+      <div class="gate multi" draggable="true" data-gate="RX">RX(θ)</div>
+      <div class="gate multi" draggable="true" data-gate="RY">RY(θ)</div>
+      <div class="gate multi" draggable="true" data-gate="RZ">RZ(θ)</div>
+      <div class="gate measure" draggable="true" data-gate="MEASURE">Pomiar</div>
+    </div>
+    
+    <div class="controls">
+      <div class="qubit-controls">
+        <button onclick="addQubit()" title="Dodaj kubit">+ Kubit</button>
+        <button onclick="removeQubit()" title="Usuń kubit">- Kubit</button>
+      </div>
+      <button class="primary" onclick="runCircuit()">▶ Uruchom Symulację</button>
+      <button class="secondary" onclick="addColumn()">➕ Dodaj Kolumnę</button>
+      <button class="danger" onclick="resetCircuit()">⟳ Resetuj Wszystko</button>
+      <button onclick="clearGates()">🗑️ Wyczyść Bramki</button>
+      <button onclick="exportCircuit()">💾 Eksportuj</button>
+      <button onclick="importCircuit()">📂 Importuj</button>
+      
+      <div class="auto-run">
+        <input type="checkbox" id="autoRun" checked>
+        <label for="autoRun">Automatyczne uruchamianie</label>
+      </div>
+    </div>
+  </div>
+
+  <div class="circuit-area">
+    <div class="circuit-header">
+      <div style="color: #8a8aff; font-size: 0.9rem;">
+        Przeciągnij bramki z panelu po lewej. Obwód uruchamia się automatycznie przy zmianach.
+      </div>
+    </div>
+    
+    <div class="circuit-container">
+      <div id="circuit" class="grid"></div>
+    </div>
+    
+    <div class="results">
+      <div class="state-info">
+        <div class="info-box">
+          <h4>Wektor Stanu</h4>
+          <div id="stateVector" class="state-vector"></div>
+        </div>
+        <div class="info-box">
+          <h4>Wyniki Pomiarów</h4>
+          <div id="probabilityBars" class="probability-bars"></div>
+          <pre id="output"></pre>
+        </div>
+      </div>
+      
+      <div class="result-section">
+        <h3>Sfery Blocha</h3>
+        <div id="blochSpheres" class="bloch-container"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="contextMenu" class="context-menu">
+  <div class="context-menu-item" onclick="editGate()">✏️ Edytuj Bramkę</div>
+  <div class="context-menu-item" onclick="removeSelectedGate()">🗑️ Usuń Bramkę</div>
+</div>
+
+<div id="gateConfig" class="gate-config">
+  <h4>Konfiguruj Bramkę</h4>
+  <div id="configContent"></div>
+  <button onclick="saveGateConfig()">Zapisz</button>
+</div>
+
+<script src="quantum.js"></script>
+<script src="circuit.js"></script>
+<script src="ui.js"></script>
+</body>
+</html>
