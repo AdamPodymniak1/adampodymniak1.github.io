@@ -49,16 +49,7 @@
     
     <div class="controls">
       <div class="qubit-controls">
-        <button onclick="addQubit()" title="Dodaj kubit">+ Kubit</button>
-        <button onclick="removeQubit()" title="Usuń kubit">- Kubit</button>
       </div>
-      <button class="primary" onclick="runCircuit()">▶ Uruchom Symulację</button>
-      <button class="secondary" onclick="addColumn()">➕ Dodaj Kolumnę</button>
-      <button class="danger" onclick="resetCircuit()">⟳ Resetuj Wszystko</button>
-      <button onclick="clearGates()">🗑️ Wyczyść Bramki</button>
-      <button onclick="exportCircuit()">💾 Eksportuj</button>
-      <button onclick="importCircuit()">📂 Importuj</button>
-      
       <div class="auto-run">
         <input type="checkbox" id="autoRun" checked>
         <label for="autoRun">Automatyczne uruchamianie</label>
@@ -96,17 +87,6 @@
       </div>
     </div>
   </div>
-</div>
-
-<div id="contextMenu" class="context-menu">
-  <div class="context-menu-item" onclick="editGate()">✏️ Edytuj Bramkę</div>
-  <div class="context-menu-item" onclick="removeSelectedGate()">🗑️ Usuń Bramkę</div>
-</div>
-
-<div id="gateConfig" class="gate-config">
-  <h4>Konfiguruj Bramkę</h4>
-  <div id="configContent"></div>
-  <button onclick="saveGateConfig()">Zapisz</button>
 </div>
 
 <script src="quantum.js"></script>
