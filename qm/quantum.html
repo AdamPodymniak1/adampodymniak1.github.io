@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Adam Podymniak</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <header>
+    <h1>Quantum lab Ziemniaka</h1>
+  </header>
+
+  <div class="wrap">
+    <nav id="menu">
+      <button data-panel="wavelength" class="active">Długość fali -> Energia</button>
+      <button data-panel="spectra">Wyszukiwanie Linii Spektralnych</button>
+      <button data-panel="uncertainty">Piaskownica Heisenberga</button>
+      <button data-panel="qrng">Quantum RNG</button>
+      <button data-panel="particlebox">1D Cząsteczka w Pudełku</button>
+      <button data-panel="doubleslit">Symulator z Dwoma Szczelinami</button>
+      <button data-panel="tunneling">Wizualizacja Tunnelingu</button>
+      <button data-panel="harmonic">Oscylator harmoniczny</button>
+    </nav>
+
+    <main>
+      <section id="wavelength" class="panel active">
+        <h2>Długość fali -> Energia</h2>
+        <div class="row">
+          <div class="card" style="max-width:360px">
+            <label>Długość fali</label>
+            <input id="wl_input" type="number" value="500" step="any">
+            <select id="wl_unit">
+              <option value="nm">nm</option>
+              <option value="m">m</option>
+              <option value="um">μm</option>
+            </select>
+            <div style="margin-top:8px"><button class="run" onclick="computeEnergy()">Oblicz</button></div>
+            <div id="wl_output" style="margin-top:12px"></div>
+          </div>
+          <div class="card">
+            <canvas id="wl_canvas"></canvas>
+            <div class="small">Przybliżenie koloru (tylko zakres widzialny)</div>
+          </div>
+        </div>
+      </section>
+
+      <section id="spectra" class="panel">
+        <h2>Wyszukiwanie Atomowych Linii Spektralnych</h2>
+        <div class="row">
+          <div class="card" style="max-width:360px">
+            <label>Długość fali (nm)</label>
+            <input id="spec_wl" type="number" value="656.3">
+            <label>Tolerancja (nm)</label>
+            <input id="spec_tol" type="number" value="1">
+            <div style="margin-top:8px"><button class="run" onclick="lookupLine()">Lookup</button></div>
+            <div id="spec_out" style="margin-top:12px"></div>
+          </div>
+          <div class="card">
+            <div class="small">Dataset: Wodór (Balmer, Lyman) & Hel (niektóre linie)</div>
+            <pre id="spec_db"></pre>
+          </div>
+        </div>
+      </section>
+
+      <section id="uncertainty" class="panel">
+        <h2>Piaskownica Niepewności Heisenberga</h2>
+        <div class="row">
+          <div class="card" style="max-width:360px">
+            <label>Δx (metry)</label>
+            <input id="dx" type="number" value="1e-10" step="any">
+            <label>Masa cząsteczki (kg) - opcjonalna</label>
+            <input id="mass" type="number" value="9.10938356e-31" step="any">
+            <div style="margin-top:8px"><button class="run" onclick="computeUncertainty()">Oblicz Δp & Δv</button></div>
+            <div id="unc_out" style="margin-top:12px"></div>
+          </div>
+          <div class="card">
+            <div class="small">Nota: Δp ≥ ħ / (2 Δx). Jeżeli podasz masę, Δv = Δp / m.</div>
+          </div>
+        </div>
+      </section>
+
+      <section id="qrng" class="panel">
+        <h2>Quantum Random Number Generator (Symulacja klasyczna)</h2>
+        <div class="row">
+          <div class="card" style="max-width:360px">
+            <label>Prawdopodobieństwo '1' (0..1)</label>
+            <input id="p1" type="number" value="0.5" step="any" min="0" max="1">
+            <label>Liczba prób</label>
+            <input id="ntrials" type="number" value="1000">
+            <div style="margin-top:8px"><button class="run" onclick="runQRNG()">Oblicz</button></div>
+            <div id="q_out" style="margin-top:12px"></div>
+          </div>
+          <div class="card">
+            <canvas id="q_canvas"></canvas>
+            <div class="small">Wykres zliczonych wartości</div>
+          </div>
+        </div>
+      </section>
+
+      <section id="particlebox" class="panel">
+        <h2>1D Cząsteczka w Pudełku - Funkcja fali / Prawdopodobieństwo</h2>
+        <div class="row">
+          <div class="card" style="max-width:360px">
+            <label>Długość pudełka L (nm)</label>
+            <input id="box_L" type="number" value="1" step="any">
+            <label>Liczba kwantowa n</label>
+            <input id="box_n" type="number" value="1" min="1">
+            <div style="margin-top:8px"><button class="run" onclick="plotBox()">Oblicz ψ²</button></div>
+            <div id="box_out" style="margin-top:12px"></div>
+          </div>
+          <div class="card">
+            <canvas id="box_canvas"></canvas>
+            <div class="small">Gęstość prawdopodobieństwa |ψ(x)|² dla "infinite square well"</div>
+          </div>
+        </div>
+      </section>
+
+      <section id="doubleslit" class="panel">
+        <h2>Symulator z Dwoma Szczelinami</h2>
+        <div class="row">
+          <div class="card" style="max-width:360px">
+            <label>Długość fali (nm)</label>
+            <input id="ds_lambda" type="number" value="500">
+            <label>Odstęp między szczelinami d (mm)</label>
+            <input id="ds_d" type="number" value="0.5">
+            <label>Odległość od ekranu D (m)</label>
+            <input id="ds_D" type="number" value="1">
+            <div style="margin-top:8px"><button class="run" onclick="plotDoubleSlit()">Oblicz Intensywność</button>
+            </div>
+            <div id="ds_out" style="margin-top:12px"></div>
+          </div>
+          <div class="card">
+            <canvas id="ds_canvas"></canvas>
+            <div class="small">Wzór intensywności na ekranie (znormalizowany)</div>
+          </div>
+        </div>
+      </section>
+
+      <section id="tunneling" class="panel">
+        <h2>Wizualizacja Prawdopodobieństwa Tunnelingu</h2>
+        <div class="row">
+          <div class="card" style="max-width:360px">
+            <label>Wysokość bariery V0 (eV)</label>
+            <input id="bar_V0" type="number" value="10">
+            <label>Energia cząsteczki E (eV)</label>
+            <input id="bar_E" type="number" value="2">
+            <label>Szerokość bariery a (nm)</label>
+            <input id="bar_a" type="number" value="0.5">
+            <div style="margin-top:8px"><button class="run" onclick="computeTunneling()">Oblicz T</button></div>
+            <div id="bar_out" style="margin-top:12px"></div>
+          </div>
+          <div class="card">
+            <canvas id="bar_canvas"></canvas>
+            <div class="small">Wykres T vs E (jeśli wybierzesz opcję energy sweep)</div>
+          </div>
+        </div>
+      </section>
+
+      <section id="harmonic" class="panel">
+        <h2>Wykres stanu własnego oscylatora harmonicznego</h2>
+        <div class="row">
+          <div class="card" style="max-width:360px">
+            <label>Liczba kwantowa n</label>
+            <input id="ho_n" type="number" value="0" min="0">
+            <label>Masa (kg)</label>
+            <input id="ho_m" type="number" value="9.10938356e-31" step="any">
+            <label>Częstotliwość kątowa ω (rad/s)</label>
+            <input id="ho_w" type="number" value="1e15" step="any">
+            <div style="margin-top:8px"><button class="run" onclick="plotHO()">Oblicz |ψ|²</button></div>
+            <div id="ho_out" style="margin-top:12px"></div>
+          </div>
+          <div class="card">
+            <canvas id="ho_canvas"></canvas>
+            <div class="small">Znormalizowana gęstość prawdopodobieństwa dla stanów własnych oscylatora harmonicznego
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="main.js"></script>
+</body>
+
+</html>
