@@ -128,3 +128,167 @@ pre {
     border-radius: 6px;
     overflow: auto
 }
+
+* {
+    box-sizing: border-box;
+}
+
+.wrap {
+    flex-direction: column;
+}
+
+nav {
+    width: 100%;
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+}
+
+nav button {
+    flex: 1;
+    white-space: nowrap;
+}
+
+.row {
+    flex-direction: column;
+}
+
+.card {
+    width: 100%;
+}
+
+canvas {
+    height: 260px;
+}
+
+@media (min-width: 768px) {
+    .wrap {
+        flex-direction: row;
+    }
+
+    nav {
+        width: 220px;
+        flex-direction: column;
+        overflow-x: visible;
+    }
+
+    nav button {
+        flex: none;
+    }
+
+    .row {
+        flex-direction: row;
+    }
+
+    canvas {
+        height: 240px;
+    }
+}
+
+@media (min-width: 1200px) {
+    nav {
+        width: 260px;
+    }
+
+    canvas {
+        height: 300px;
+    }
+
+    h1 {
+        font-size: 22px;
+    }
+
+    main {
+        padding: 24px;
+    }
+}
+
+@media (max-width: 767px) {
+
+    body {
+        font-size: 15px;
+    }
+
+    header {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        text-align: center;
+    }
+
+    h1 {
+        font-size: 18px;
+    }
+
+    .wrap {
+        padding: 8px;
+        gap: 12px;
+    }
+
+    nav {
+        position: sticky;
+        top: 56px;
+        z-index: 9;
+        padding: 8px;
+        border-radius: 10px;
+        background: #061a2a;
+        box-shadow: 0 6px 16px rgba(0,0,0,.4);
+    }
+
+    nav button {
+        padding: 12px 14px;
+        font-size: 14px;
+        border-radius: 999px;
+    }
+
+    nav button.active {
+        box-shadow: 0 0 0 2px rgba(255,255,255,.15) inset;
+    }
+
+    main {
+        padding: 12px;
+    }
+
+    h2 {
+        font-size: 18px;
+        margin-top: 4px;
+    }
+
+    .row {
+        gap: 10px;
+    }
+
+    .card {
+        padding: 14px;
+        border-radius: 12px;
+    }
+
+    label {
+        font-size: 14px;
+    }
+
+    input,
+    select {
+        font-size: 15px;
+        padding: 10px;
+    }
+
+    button.run {
+        width: 100%;
+        padding: 12px;
+        font-size: 15px;
+    }
+
+    canvas {
+        height: 300px;
+    }
+
+    .small {
+        font-size: 12px;
+        text-align: center;
+    }
+
+    footer {
+        text-align: center;
+    }
+}

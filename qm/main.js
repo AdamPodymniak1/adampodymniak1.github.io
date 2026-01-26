@@ -4,6 +4,18 @@ const c = 299792458;
 const eV = 1.602176634e-19;
 const me = 9.10938356e-31;
 
+function getHiDPICtx(canvas) {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return ctx;
+}
+
 document.querySelectorAll('#menu button').forEach(btn => {
     btn.addEventListener('click', () => {
         document.querySelectorAll('#menu button').forEach(b => b.classList.remove('active'));
@@ -85,34 +97,30 @@ function computeEnergy() {
 }
 
 function drawColorBar(canvas, lambda) {
-    const ctx = canvas.getContext('2d');
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = canvas.clientWidth * dpr;
-    canvas.height = canvas.clientHeight * dpr;
-    ctx.scale(dpr, dpr);
-    const w = canvas.clientWidth,
-        h = canvas.clientHeight;
-    const imgData = ctx.createImageData(w, h);
+    const ctx = getHiDPICtx(canvas);
+
+    const w = canvas.clientWidth;
+    const h = canvas.clientHeight;
+
+    ctx.clearRect(0, 0, w, h);
+
     for (let x = 0; x < w; x++) {
-        const t = x / w;
+        const t = x / (w - 1);
         const wl = 380 + t * (780 - 380);
-        const rgb = wavelengthToRGB(wl);
-        for (let y = 0; y < h; y++) {
-            const idx = (y * w + x) * 4;
-            imgData.data[idx] = rgb[0];
-            imgData.data[idx + 1] = rgb[1];
-            imgData.data[idx + 2] = rgb[2];
-            imgData.data[idx + 3] = 255;
-        }
+        const [r, g, b] = wavelengthToRGB(wl);
+
+        ctx.fillStyle = `rgb(${r},${g},${b})`;
+        ctx.fillRect(x, 0, 1, h);
     }
-    ctx.putImageData(imgData, 0, 0);
-    if (lambda) {
-        const wl_nm = lambda * 1e9;
-        if (wl_nm < 380 || wl_nm > 780) return;
-        ctx.fillStyle = 'rgba(255,255,255,0.9)';
-        const x = (wl_nm - 380) / (780 - 380) * w;
-        ctx.fillRect(x - 1, 0, 2, h);
-    }
+
+    if (!lambda) return;
+
+    const wl_nm = lambda * 1e9;
+    if (wl_nm < 380 || wl_nm > 780) return;
+
+    const x = (wl_nm - 380) / (780 - 380) * w;
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    ctx.fillRect(x - 1, 0, 2, h);
 }
 
 function wavelengthToRGB(wavelength) {
