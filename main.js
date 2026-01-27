@@ -10,6 +10,7 @@ let DPR=1;
 let particles=[],targets=[];
 let mouse={x:-9999,y:-9999,down:false};
 let lastWidth = null;
+let fixedHeight = null;
 
 const config={
   sample:6,
@@ -24,7 +25,11 @@ const config={
 
 function resize(){
   const w = innerWidth;
-  const h = innerHeight;
+  if (fixedHeight === null) {
+    fixedHeight = innerHeight;
+  }
+
+  const h = fixedHeight;
 
   const firstRun = lastWidth === null;
   const widthChanged = firstRun || w !== lastWidth;

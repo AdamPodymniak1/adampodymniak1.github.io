@@ -4,7 +4,6 @@ html, body {
   background:#050516;
   font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
   color:#dce7ff;
-  overscroll-behavior: none;
 }
 
 *::-webkit-scrollbar { display:none; }
