@@ -173,6 +173,7 @@ const offCtx=off.getContext("2d");
 let DPR=1;
 let particles=[],targets=[];
 let mouse={x:-9999,y:-9999,down:false};
+let lastWidth = null;
 
 const config={
   sample:6,
@@ -186,23 +187,44 @@ const config={
 };
 
 function resize(){
-  DPR=Math.max(1,devicePixelRatio||1);
-  const w=innerWidth;
-  const h=innerHeight;
-  canvas.width=w*DPR;
-  canvas.height=h*DPR;
-  canvas.style.width=w+"px";
-  canvas.style.height=h+"px";
-  ctx.setTransform(DPR,0,0,DPR,0,0);
+  const w = innerWidth;
+  const h = innerHeight;
 
-  off.width=w*0.9*DPR;
-  off.height=h*0.38*DPR;
+  const widthChanged = w !== lastWidth;
+  lastWidth = w;
 
-  const density=Math.max(1,900/w);
-  config.maxParticles=Math.floor(2400*density);
+  DPR = Math.max(1, devicePixelRatio || 1);
 
-  regenerateParticles(FIXED_TEXT);
-  createWaveGraphics();
+  canvas.width = w * DPR;
+  canvas.height = h * DPR;
+  canvas.style.width = w + "px";
+  canvas.style.height = h + "px";
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+  off.width = w * 0.9 * DPR;
+  off.height = h * 0.38 * DPR;
+
+  if (w < 480) {
+    config.particleSize = 1.6;
+  } else if (w < 768) {
+    config.particleSize = 2.0;
+  } else {
+    config.particleSize = 2.4;
+  }
+
+  const area = w * h;
+  const baseArea = 1920 * 1080;
+
+  const scale = Math.min(1, area / baseArea) * 1.3;
+
+  config.maxParticles = Math.floor(
+    Math.max(420, Math.min(3000, 2400 * scale))
+  );
+
+  if (widthChanged) {
+    regenerateParticles(FIXED_TEXT);
+    createWaveGraphics();
+  }
 }
 
 function sampleTextPoints(text){
