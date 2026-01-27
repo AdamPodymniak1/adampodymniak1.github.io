@@ -10,7 +10,7 @@ let DPR=1;
 let particles=[],targets=[];
 let mouse={x:-9999,y:-9999,down:false};
 let lastWidth = null;
-let fixedHeight = null;
+let canvasHeight = window.innerHeight;
 
 const config={
   sample:6,
@@ -25,11 +25,7 @@ const config={
 
 function resize(){
   const w = innerWidth;
-  if (fixedHeight === null) {
-    fixedHeight = innerHeight;
-  }
-
-  const h = fixedHeight;
+  const h = canvasHeight;
 
   const firstRun = lastWidth === null;
   const widthChanged = firstRun || w !== lastWidth;
