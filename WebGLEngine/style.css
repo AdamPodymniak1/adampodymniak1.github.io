@@ -282,3 +282,61 @@ button:hover {
 ::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.3);
 }
+
+@media (max-width: 768px) {
+    #editor {
+        width: 85vw;
+    }
+
+    .editor-toggle {
+        display: none;
+    }
+}
+#editor-swipe-indicator {
+    position: fixed;
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%);
+    z-index: 998;
+    pointer-events: none;
+}
+
+#editor-swipe-indicator .handle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 12px;
+    background: rgba(30, 30, 30, 0.85);
+    border-radius: 12px 0 0 12px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-right: none;
+    animation: swipePulse 1.5s infinite;
+}
+
+#editor-swipe-indicator .arrow {
+    font-size: 18px;
+    color: #64b5f6;
+    animation: arrowWiggle 1.5s infinite;
+}
+
+@keyframes swipePulse {
+    0% { transform: translateX(0); opacity: 0.6; }
+    50% { transform: translateX(-6px); opacity: 1; }
+    100% { transform: translateX(0); opacity: 0.6; }
+}
+
+@keyframes arrowWiggle {
+    0% { transform: translateX(0); }
+    50% { transform: translateX(-4px); }
+    100% { transform: translateX(0); }
+}
+
+@media (min-width: 769px) {
+    #editor-swipe-indicator {
+        display: none;
+    }
+}
+
+#editor.open ~ #editor-swipe-indicator {
+    display: none;
+}

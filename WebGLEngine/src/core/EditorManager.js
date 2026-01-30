@@ -295,6 +295,35 @@ export class EditorManager {
             
             celShadingControls.style.display = celShadingEnabled.checked ? 'block' : 'none';
         }
+
+        let touchStartX = 0;
+        let touchCurrentX = 0;
+        let swiping = false;
+
+        document.addEventListener('touchstart', e => {
+            touchStartX = e.touches[0].clientX;
+            swiping = touchStartX > window.innerWidth - 30;
+        });
+
+        document.addEventListener('touchmove', e => {
+            if (!swiping) return;
+            touchCurrentX = e.touches[0].clientX;
+        });
+
+        document.addEventListener('touchend', () => {
+            const delta = touchCurrentX - touchStartX;
+            const editor = document.getElementById('editor');
+
+            if (touchStartX > window.innerWidth - 30 && delta < -50) {
+                editor.classList.add('open');
+            }
+
+            if (editor.classList.contains('open') && delta > 50) {
+                editor.classList.remove('open');
+            }
+
+            swiping = false;
+        });
     }
     
     setupFilePicker() {
