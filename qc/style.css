@@ -6,6 +6,21 @@ body {
   overflow: hidden;
 }
 
+#menuToggle {
+  display: none;
+  background: none;
+  border: none;
+  color: #8a8aff;
+  font-size: 1.5rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+#menuToggle.active {
+  color: #3cffb2;
+  text-shadow: 0 0 8px #3cffb2;
+}
+
 header {
   padding: 16px;
   text-align: center;
@@ -46,6 +61,12 @@ header {
   display: flex;
   flex-direction: column;
   border-right: 1px solid #2a2f4a;
+  z-index: 1000;
+  pointer-events: auto;
+  touch-action: manipulation;
+  -webkit-overflow-scrolling: touch;
+  overflow-y: auto;
+  touch-action: pan-y;
 }
 
 .palette-section {
@@ -76,6 +97,7 @@ header {
   transition: all 0.2s;
   user-select: none;
   position: relative;
+  touch-action: none; 
 }
 
 .gate:hover {
@@ -437,7 +459,7 @@ header {
   display: flex;
   height: 150px;
   align-items: flex-end;
-  gap: 6px;
+  gap: 4px;
   margin-top: 10px;
   padding: 10px;
   background: rgba(15, 20, 51, 0.7);
@@ -593,4 +615,160 @@ header {
 
 .auto-run input[type="checkbox"] {
   transform: scale(1.2);
+}
+
+@media (max-width: 1024px) {
+  body {
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .app {
+    height: auto;
+    min-height: calc(100vh - 70px);
+  }
+
+  #menuToggle {
+    display: block;
+  }
+}
+
+@media (max-width: 900px) {
+
+  .sidebar {
+    position: fixed;
+    top: 70px;
+    left: 0;
+    bottom: 0;
+    z-index: 1000;
+    transform: translateX(-100%);
+    transition: transform 0.35s ease;
+    box-shadow: 6px 0 30px rgba(0,0,0,0.6);
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  header {
+    gap: 10px;
+  }
+
+  .header-controls {
+    display: none;
+  }
+
+  .circuit-container {
+    overflow-x: auto;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .grid {
+    min-width: max-content;
+  }
+
+  .column {
+    width: 88px;
+  }
+
+  .wire-container {
+    height: 70px;
+  }
+
+  .gate-slot {
+    width: 54px;
+    height: 54px;
+    left: 17px;
+    font-size: 1.05rem;
+  }
+
+  .gate-slot.control-dot {
+    width: 22px;
+    height: 22px;
+  }
+
+  .results {
+    max-height: none;
+  }
+
+  .state-info {
+    flex-direction: column;
+  }
+
+  .info-box {
+    min-width: unset;
+  }
+
+  .bloch-container {
+    flex-direction: column;
+  }
+
+  .bloch-sphere {
+    min-width: unset;
+  }
+}
+
+@media (max-width: 480px) {
+
+  .gate {
+    padding: 9px;
+    font-size: 0.9rem;
+    border-radius: 7px;
+  }
+
+  .column {
+    width: 76px;
+  }
+
+  .wire-container {
+    height: 64px;
+  }
+
+  .gate-slot {
+    width: 46px;
+    height: 46px;
+    left: 15px;
+    font-size: 0.95rem;
+    border-radius: 9px;
+  }
+
+  .gate-slot.filled {
+    box-shadow: 0 3px 10px rgba(47, 60, 255, 0.35);
+  }
+
+  .context-menu {
+    min-width: 140px;
+    font-size: 13px;
+  }
+
+  .gate-config {
+    min-width: 180px;
+  }
+
+  .probability-bars {
+    height: 120px;
+  }
+
+  .prob-label {
+    font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 380px) {
+
+  .column {
+    width: 68px;
+  }
+
+  .gate-slot {
+    width: 40px;
+    height: 40px;
+    font-size: 0.85rem;
+  }
+
+  .wire-label {
+    font-size: 0.8rem;
+    width: 52px;
+  }
 }

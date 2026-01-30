@@ -427,20 +427,132 @@ function removeSelectedGate() {
 }
 
 function hideContextMenu() {
-  document.getElementById("contextMenu").style.display = 'none';
+  const menu = document.getElementById("contextMenu");
+  if(menu) menu.style.display = 'none';
 }
 
 document.addEventListener("click", hideContextMenu);
 document.addEventListener("contextmenu", hideContextMenu);
 
 document.querySelectorAll(".gate").forEach(g => {
+  // Desktop drag
   g.ondragstart = e => {
     draggedGate = g.dataset.gate;
     e.dataTransfer.setData("text/plain", g.dataset.gate);
     g.style.opacity = "0.5";
   };
   g.ondragend = e => g.style.opacity = "1";
+
+  // Mobile touch drag
+  g.addEventListener("touchstart", e => {
+    e.preventDefault();
+    draggedGate = g.dataset.gate;
+    g.style.opacity = "0.5";
+
+    const touchMoveHandler = moveEvent => {
+      moveEvent.preventDefault();
+      const touch = moveEvent.touches[0];
+      const el = document.elementFromPoint(touch.clientX, touch.clientY);
+
+      document.querySelectorAll(".gate-slot").forEach(slot => {
+        if(slot.contains(el) || slot === el) {
+          if(!gridData[slot.dataset.col][slot.dataset.row]) {
+            slot.style.borderColor = "#3cffb2";
+            slot.style.background = "rgba(60,255,178,0.1)";
+          }
+        } else {
+          slot.style.borderColor = "";
+          slot.style.background = "";
+        }
+      });
+    };
+
+    const touchEndHandler = endEvent => {
+      const touch = endEvent.changedTouches[0];
+      const el = document.elementFromPoint(touch.clientX, touch.clientY);
+
+      if(el && el.classList.contains("gate-slot")) {
+        const col = parseInt(el.dataset.col);
+        const row = parseInt(el.dataset.row);
+        if(!gridData[col][row] && draggedGate) {
+          handleGateDrop(draggedGate, col, row);
+        }
+      }
+
+      draggedGate = null;
+      g.style.opacity = "1";
+      document.querySelectorAll(".gate-slot").forEach(slot => {
+        slot.style.borderColor = "";
+        slot.style.background = "";
+      });
+
+      document.removeEventListener("touchmove", touchMoveHandler);
+      document.removeEventListener("touchend", touchEndHandler);
+    };
+
+    document.addEventListener("touchmove", touchMoveHandler, {passive: false});
+    document.addEventListener("touchend", touchEndHandler, {passive: false});
+  }, {passive: false});
 });
+
+function handleGateDrop(gate, col, row) {
+  if(['CNOT', 'CY', 'CZ'].includes(gate)) {
+    for(let i=0; i<nQubits; i++) {
+      if(i !== row && !gridData[col][i]) {
+        gridData[col][row] = {
+          gate: gate,
+          type: 'control',
+          control: i,
+          target: row
+        };
+        gridData[col][i] = {gate: '●', type: 'control-dot'};
+        break;
+      }
+    }
+    if(!gridData[col][row]) {
+      alert("Potrzebna pusta linia kubitu dla kontroli");
+      return;
+    }
+  } else if(gate === 'CCX') {
+    const controls = [];
+    for(let i=0; i<nQubits; i++) {
+      if(i !== row && !gridData[col][i] && controls.length < 2) {
+        controls.push(i);
+        gridData[col][i] = {gate: '●', type: 'control-dot'};
+      }
+    }
+    if(controls.length === 2) {
+      gridData[col][row] = {gate: 'CCX', type: 'control', controls, target: row};
+    } else {
+      for(const ctrl of controls) gridData[col][ctrl] = null;
+      alert("Potrzebne 2 puste kubity dla kontroli");
+      return;
+    }
+  } else if(gate === 'SWAP') {
+    let swapRow = -1;
+    for(let i=0; i<nQubits; i++) {
+      if(i !== row && !gridData[col][i]) {
+        swapRow = i;
+        break;
+      }
+    }
+    if(swapRow !== -1) {
+      gridData[col][row] = {gate: 'SWAP', type: 'multi', swapWith: swapRow};
+      gridData[col][swapRow] = {gate: 'SWAP', type: 'multi', swapWith: row};
+    } else {
+      alert("Potrzebna pusta linia kubitu dla SWAP");
+      return;
+    }
+  } else if(['RX', 'RY', 'RZ'].includes(gate)) {
+    gridData[col][row] = {gate, type: 'multi', angle: Math.PI/2};
+  } else {
+    gridData[col][row] = {gate, type: 'basic'};
+  }
+
+  renderGrid();
+  drawControlLines();
+  if(autoRunEnabled) runCircuit();
+}
 
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById("autoRun").checked = true;
@@ -450,3 +562,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
 document.addEventListener("dragover", e => e.preventDefault());
 document.addEventListener("drop", e => e.preventDefault());
+
+const menuToggle = document.getElementById("menuToggle");
+const sidebar = document.querySelector(".sidebar");
+
+menuToggle.onclick = () => {
+  sidebar.classList.toggle("open");
+  menuToggle.classList.toggle("active");
+};
+
