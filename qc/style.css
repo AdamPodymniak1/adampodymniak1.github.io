@@ -435,9 +435,9 @@ header {
 
 .probability-bars {
   display: flex;
-  height: 100px;
+  height: 150px;
   align-items: flex-end;
-  gap: 4px;
+  gap: 6px;
   margin-top: 10px;
   padding: 10px;
   background: rgba(15, 20, 51, 0.7);

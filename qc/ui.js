@@ -324,6 +324,41 @@ function drawBlochSphereOutline(ctx, centerX, centerY, radius) {
   ctx.stroke();
 }
 
+function drawBlochSphereVector(q, x, y, z) {
+  const canvas = document.getElementById(`bloch${q}`);
+  const info = document.getElementById(`blochInfo${q}`);
+  if (!canvas) return;
+
+  const ctx = canvas.getContext("2d");
+  const r = canvas.width * 0.35;
+  const cx = canvas.width / 2;
+  const cy = canvas.height / 2;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  drawBlochSphereOutline(ctx, cx, cy, r);
+
+  const px = cx + r * x;
+  const py = cy - r * z;
+
+  ctx.strokeStyle = "#3cffb2";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy);
+  ctx.lineTo(px, py);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(px, py, 6, 0, Math.PI * 2);
+  ctx.fillStyle = "#3cffb2";
+  ctx.fill();
+
+  info.innerHTML = `
+    x = ${x.toFixed(3)}<br>
+    y = ${y.toFixed(3)}<br>
+    z = ${z.toFixed(3)}
+  `;
+}
+
 function openAngleConfig(col, row, gateData) {
   selectedGate = {col, row, data: gateData};
   const config = document.getElementById("gateConfig");

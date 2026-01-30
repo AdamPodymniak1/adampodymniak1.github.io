@@ -47,49 +47,49 @@ class QuantumCircuit {
   }
 
   applyControlledGate(gate, controls, target, params=null) {
+    const gateMatrix = typeof gate === "function" ? gate(params) : gate;
     const ns = Array(this.dim).fill(C(0));
-    for(let i=0; i<this.dim; i++) {
-      let allControls = true;
-      for(const c of controls) {
-        if(((i >> c) & 1) === 0) {
-          allControls = false;
+
+    for (let i = 0; i < this.dim; i++) {
+      let active = true;
+      for (const c of controls) {
+        if (((i >> c) & 1) === 0) {
+          active = false;
           break;
         }
       }
-      
-      if(allControls) {
-        const bit = (i >> target) & 1;
-        const base = i & ~(1 << target);
-        for(let b=0; b<2; b++) {
-          const j = base | (b << target);
-          let gateMatrix;
-          if(typeof gate === 'function') {
-            gateMatrix = gate(params);
-          } else {
-            gateMatrix = gate;
-          }
-          for(let b2=0; b2<2; b2++) {
-            const k = base | (b2 << target);
-            ns[j] = add(ns[j], mul(gateMatrix[bit][b2], this.state[k]));
-          }
-        }
-      } else {
-        ns[i] = this.state[i];
+
+      if (!active) {
+        ns[i] = add(ns[i], this.state[i]);
+        continue;
+      }
+
+      const bit = (i >> target) & 1;
+      const base = i & ~(1 << target);
+
+      for (let b = 0; b < 2; b++) {
+        const j = base | (b << target);
+        ns[j] = add(ns[j], mul(gateMatrix[b][bit], this.state[i]));
       }
     }
+
     this.state = ns;
   }
 
+
   applySWAP(q1, q2) {
-    const ns = [...this.state];
-    for(let i=0; i<this.dim; i++) {
-      const bit1 = (i >> q1) & 1;
-      const bit2 = (i >> q2) & 1;
-      if(bit1 !== bit2) {
-        const j = i ^ (1 << q1) ^ (1 << q2);
-        ns[j] = this.state[i];
+    const ns = Array(this.dim).fill(C(0));
+
+    for (let i = 0; i < this.dim; i++) {
+      const b1 = (i >> q1) & 1;
+      const b2 = (i >> q2) & 1;
+      let j = i;
+      if (b1 !== b2) {
+        j = i ^ (1 << q1) ^ (1 << q2);
       }
+      ns[j] = add(ns[j], this.state[i]);
     }
+
     this.state = ns;
   }
 
@@ -147,4 +147,26 @@ class QuantumCircuit {
       };
     });
   }
+  
+  getBlochVector(qubit) {
+    let x = 0, y = 0, z = 0;
+
+    for (let i = 0; i < this.dim; i++) {
+      const bit = (i >> qubit) & 1;
+      z += bit === 0 ? abs2(this.state[i]) : -abs2(this.state[i]);
+    }
+
+    for (let i = 0; i < this.dim; i++) {
+      const j = i ^ (1 << qubit);
+      if (j > i) {
+        const a = this.state[i];
+        const b = this.state[j];
+        x += 2 * (a.re * b.re + a.im * b.im);
+        y += 2 * (a.im * b.re - a.re * b.im);
+      }
+    }
+
+    return { x, y, z };
+  }
+
 }

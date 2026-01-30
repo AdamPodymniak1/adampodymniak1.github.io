@@ -155,17 +155,7 @@ function runCircuit() {
       } else if(gateData.gate === 'RZ') {
         circuit.applyGate(GATES.RZ(gateData.angle || Math.PI/2), q);
       } else if(gateData.gate === 'MEASURE') {
-        const probs = circuit.state.map(abs2);
-        let r = Math.random(), a = 0;
-        for(let i=0; i<probs.length; i++) {
-          a += probs[i];
-          if(r < a) {
-            const collapsed = Array(circuit.dim).fill(C(0));
-            collapsed[i] = C(1);
-            circuit.state = collapsed;
-            break;
-          }
-        }
+       
       } else if(GATES[gateData.gate]) {
         circuit.applyGate(GATES[gateData.gate], q);
       }
@@ -220,9 +210,8 @@ function runCircuit() {
   });
   
   for(let q=0; q<nQubits; q++) {
-    const alpha = circuit.getQubitState(q, 0);
-    const beta = circuit.getQubitState(q, 1);
-    drawBlochSphere(q, alpha, beta);
+    const { x, y, z } = circuit.getBlochVector(q);
+    drawBlochSphereVector(q, x, y, z);
   }
 }
 
