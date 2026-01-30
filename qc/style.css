@@ -6,6 +6,29 @@ body {
   overflow: hidden;
 }
 
+.qbtn {
+  background: #1e1e2f;
+  color: #3cffb2;
+  border: 2px solid #3cffb2;
+  border-radius: 12px;
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.qbtn:hover {
+  background: #3cffb2;
+  color: #1e1e2f;
+  box-shadow: 0 0 12px rgba(60, 255, 178, 0.6);
+}
+
+.qbtn:active {
+  transform: scale(0.97);
+  box-shadow: 0 0 6px rgba(60, 255, 178, 0.4);
+}
+
 #menuToggle {
   display: none;
   background: none;
