@@ -330,7 +330,6 @@ export class EditorManager {
         const mobileControls = document.getElementById('mobile-controls');
 
         if (editor && mobileControls && isMobile) {
-            console.log(isMobile);
             const observer = new MutationObserver(() => {
                 mobileControls.style.display = editor.classList.contains('open')
                     ? 'none'
