@@ -333,7 +333,6 @@ async function main() {
     window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
     window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
 
-    canvas.addEventListener('click', () => canvas.requestPointerLock());
     let pointerLocked = false;
 
     document.addEventListener('pointerlockchange', () => {
@@ -345,6 +344,61 @@ async function main() {
         camera.processMouse(e.movementX, e.movementY);
     });
 
+    const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+    if (!isMobile) {
+        canvas.addEventListener('click', () => canvas.requestPointerLock());
+    }
+
+    const mobileInput = {
+        forward: false,
+        backward: false,
+        left: false,
+        right: false,
+        up: false,
+        down: false,
+        lookLeft: false,
+        lookRight: false,
+        lookUp: false,
+        lookDown: false
+    };
+
+    if (isMobile) {
+        document.querySelectorAll('[data-move]').forEach(btn => {
+            const action = btn.dataset.move;
+
+            btn.addEventListener('touchstart', e => {
+                e.preventDefault();
+                mobileInput[action] = true;
+            });
+
+            btn.addEventListener('touchend', () => {
+                mobileInput[action] = false;
+            });
+
+            btn.addEventListener('touchcancel', () => {
+                mobileInput[action] = false;
+            });
+        });
+
+        document.querySelectorAll('[data-look]').forEach(btn => {
+            const action = btn.dataset.look;
+
+            btn.addEventListener('touchstart', e => {
+                e.preventDefault();
+                mobileInput[`look${action.charAt(0).toUpperCase() + action.slice(1)}`] = true;
+            });
+
+            btn.addEventListener('touchend', () => {
+                mobileInput[`look${action.charAt(0).toUpperCase() + action.slice(1)}`] = false;
+            });
+
+            btn.addEventListener('touchcancel', () => {
+                mobileInput[`look${action.charAt(0).toUpperCase() + action.slice(1)}`] = false;
+            });
+        });
+    }
+
     let gunRotate = 0;
 
     function loop() {
@@ -353,13 +407,21 @@ async function main() {
         postProcessor.begin();
         
         camera.move({
-            forward: keys['w'],
-            backward: keys['s'],
-            left: keys['a'],
-            right: keys['d'],
-            up: keys[' '],
-            down: keys['shift']
+            forward: keys['w'] || mobileInput.forward,
+            backward: keys['s'] || mobileInput.backward,
+            left: keys['a'] || mobileInput.left,
+            right: keys['d'] || mobileInput.right,
+            up: keys[' '] || mobileInput.up,
+            down: keys['shift'] || mobileInput.down
         });
+        if (isMobile) {
+            const lookSpeed = 2.2;
+
+            if (mobileInput.lookLeft)  camera.processMouse(-lookSpeed, 0);
+            if (mobileInput.lookRight) camera.processMouse(lookSpeed, 0);
+            if (mobileInput.lookUp)    camera.processMouse(0, -lookSpeed);
+            if (mobileInput.lookDown)  camera.processMouse(0, lookSpeed);
+        }
         camera.updateViewMatrix();
 
         mainShader.use();

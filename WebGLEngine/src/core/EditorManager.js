@@ -324,6 +324,19 @@ export class EditorManager {
 
             swiping = false;
         });
+
+        const editor = document.getElementById('editor');
+        const mobileControls = document.getElementById('mobile-controls');
+
+        if (editor && mobileControls) {
+            const observer = new MutationObserver(() => {
+                mobileControls.style.display = editor.classList.contains('open')
+                    ? 'none'
+                    : 'block';
+            });
+
+            observer.observe(editor, { attributes: true, attributeFilter: ['class'] });
+        }
     }
     
     setupFilePicker() {
