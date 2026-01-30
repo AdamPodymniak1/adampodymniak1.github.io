@@ -13,6 +13,17 @@ import { EditorManager } from './core/EditorManager.js';
 
 const editor = new EditorManager();
 
+const loadingScreen = document.getElementById('loading-screen');
+function hideLoadingScreen() {
+    if (!loadingScreen) return;
+
+    loadingScreen.classList.add('hidden');
+
+    setTimeout(() => {
+        loadingScreen.style.display = 'none';
+    }, 600);
+}
+
 async function main() {
     const canvas = document.getElementById('game');
     canvas.width = window.innerWidth;
@@ -491,7 +502,8 @@ async function main() {
 
         requestAnimationFrame(loop);
     }
-
+    
+    hideLoadingScreen()
     loop();
 }
 
