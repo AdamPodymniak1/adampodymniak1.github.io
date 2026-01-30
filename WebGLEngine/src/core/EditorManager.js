@@ -326,9 +326,10 @@ export class EditorManager {
         });
 
         const editor = document.getElementById('editor');
+        const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
         const mobileControls = document.getElementById('mobile-controls');
 
-        if (editor && mobileControls) {
+        if (editor && mobileControls && isMobile) {
             const observer = new MutationObserver(() => {
                 mobileControls.style.display = editor.classList.contains('open')
                     ? 'none'
@@ -337,6 +338,7 @@ export class EditorManager {
 
             observer.observe(editor, { attributes: true, attributeFilter: ['class'] });
         }
+
     }
     
     setupFilePicker() {
