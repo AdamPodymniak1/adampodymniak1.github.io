@@ -1,0 +1,172 @@
+const N = 70;
+const ITER = 4;
+const DIFF = 0.0001;
+const VISC = 0.0001;
+const DT = 0.1;
+
+const size = (N+2)*(N+2);
+const IX = (x,y)=>x+(N+2)*y;
+
+const dR = new Float32Array(size);
+const dG = new Float32Array(size);
+const dB = new Float32Array(size);
+const sR = new Float32Array(size);
+const sG = new Float32Array(size);
+const sB = new Float32Array(size);
+const Vx = new Float32Array(size);
+const Vy = new Float32Array(size);
+const Vx0 = new Float32Array(size);
+const Vy0 = new Float32Array(size);
+
+let colorCycle = 0;
+
+function setBnd(b,x){
+  for(let i=1;i<=N;i++){
+    x[IX(0,i)]   = b===1 ? -x[IX(1,i)] : x[IX(1,i)];
+    x[IX(N+1,i)] = b===1 ? -x[IX(N,i)] : x[IX(N,i)];
+    x[IX(i,0)]   = b===2 ? -x[IX(i,1)] : x[IX(i,1)];
+    x[IX(i,N+1)] = b===2 ? -x[IX(i,N)] : x[IX(i,N)];
+  }
+  x[IX(0,0)]         = 0.5*(x[IX(1,0)]+x[IX(0,1)]);
+  x[IX(0,N+1)]       = 0.5*(x[IX(1,N+1)]+x[IX(0,N)]);
+  x[IX(N+1,0)]       = 0.5*(x[IX(N,0)]+x[IX(N+1,1)]);
+  x[IX(N+1,N+1)]     = 0.5*(x[IX(N,N+1)]+x[IX(N+1,N)]);
+}
+
+function linSolve(b,x,x0,a,c){
+  for(let k=0;k<ITER;k++){
+    for(let i=1;i<=N;i++){
+      for(let j=1;j<=N;j++){
+        x[IX(i,j)] =
+          (x0[IX(i,j)] +
+          a*(x[IX(i-1,j)]+x[IX(i+1,j)]+x[IX(i,j-1)]+x[IX(i,j+1)]))/c;
+      }
+    }
+    setBnd(b,x);
+  }
+}
+
+function diffuse(b,x,x0,diff){
+  linSolve(b,x,x0,DT*diff*N*N,1+4*DT*diff*N*N);
+}
+
+function advect(b,d,d0,u,v){
+  const dt0 = DT*N;
+  for(let i=1;i<=N;i++){
+    for(let j=1;j<=N;j++){
+      let x=i-dt0*u[IX(i,j)];
+      let y=j-dt0*v[IX(i,j)];
+      x=Math.max(0.5,Math.min(N+0.5,x));
+      y=Math.max(0.5,Math.min(N+0.5,y));
+      const i0=Math.floor(x), i1=i0+1;
+      const j0=Math.floor(y), j1=j0+1;
+      const s1=x-i0, s0=1-s1;
+      const t1=y-j0, t0=1-t1;
+      d[IX(i,j)] =
+        s0*(t0*d0[IX(i0,j0)]+t1*d0[IX(i0,j1)]) +
+        s1*(t0*d0[IX(i1,j0)]+t1*d0[IX(i1,j1)]);
+    }
+  }
+  setBnd(b,d);
+}
+
+function project(u,v,p,div){
+  for(let i=1;i<=N;i++){
+    for(let j=1;j<=N;j++){
+      div[IX(i,j)] = -0.5*(u[IX(i+1,j)]-u[IX(i-1,j)]+v[IX(i,j+1)]-v[IX(i,j-1)])/N;
+      p[IX(i,j)] = 0;
+    }
+  }
+  setBnd(0,div);
+  setBnd(0,p);
+  linSolve(0,p,div,1,4);
+  for(let i=1;i<=N;i++){
+    for(let j=1;j<=N;j++){
+      u[IX(i,j)] -= 0.5*N*(p[IX(i+1,j)]-p[IX(i-1,j)]);
+      v[IX(i,j)] -= 0.5*N*(p[IX(i,j+1)]-p[IX(i,j-1)]);
+    }
+  }
+  setBnd(1,u);
+  setBnd(2,v);
+}
+
+function step(){
+  diffuse(1,Vx0,Vx,VISC);
+  diffuse(2,Vy0,Vy,VISC);
+  project(Vx0,Vy0,Vx,Vy);
+  advect(1,Vx,Vx0,Vx0,Vy0);
+  advect(2,Vy,Vy0,Vx0,Vy0);
+  project(Vx,Vy,Vx0,Vy0);
+  diffuse(0,sR,dR,DIFF);
+  diffuse(0,sG,dG,DIFF);
+  diffuse(0,sB,dB,DIFF);
+  advect(0,dR,sR,Vx,Vy);
+  advect(0,dG,sG,Vx,Vy);
+  advect(0,dB,sB,Vx,Vy);
+}
+
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+let cell = 1;
+
+function resize(){
+  const r = canvas.getBoundingClientRect();
+  const dpr = window.devicePixelRatio||1;
+  canvas.width = r.width*dpr;
+  canvas.height = r.height*dpr;
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  cell = r.width/N;
+}
+window.addEventListener("resize",resize);
+resize();
+
+function render(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  for(let i=1;i<=N;i++){
+    for(let j=1;j<=N;j++){
+      ctx.fillStyle=`rgb(${Math.min(255,dR[IX(i,j)]*200)},${Math.min(255,dG[IX(i,j)]*200)},${Math.min(255,dB[IX(i,j)]*200)})`;
+      ctx.fillRect((i-1)*cell,(j-1)*cell,cell,cell);
+    }
+  }
+}
+
+function color(){
+  const t=Date.now()*0.001+(colorCycle+=0.01);
+  return [(Math.sin(t)+1)*5,(Math.sin(t+2.094)+1)*5,(Math.sin(t+4.188)+1)*5];
+}
+
+let down=false,lx=0,ly=0;
+
+canvas.addEventListener("pointerdown",e=>{down=true;lx=e.clientX;ly=e.clientY});
+canvas.addEventListener("pointerup",()=>down=false);
+canvas.addEventListener("pointerleave",()=>down=false);
+
+canvas.addEventListener("pointermove",e=>{
+  if(!down) return;
+  const r=canvas.getBoundingClientRect();
+  const x=Math.floor((e.clientX-r.left)/r.width*N);
+  const y=Math.floor((e.clientY-r.top)/r.height*N);
+  const dx=e.clientX-lx;
+  const dy=e.clientY-ly;
+  if(x>1&&x<N&&y>1&&y<N){
+    Vx[IX(x,y)] += dx*0.2;
+    Vy[IX(x,y)] += dy*0.2;
+    const c=color();
+    dR[IX(x,y)]+=c[0];
+    dG[IX(x,y)]+=c[1];
+    dB[IX(x,y)]+=c[2];
+  }
+  lx=e.clientX;
+  ly=e.clientY;
+});
+
+document.getElementById("reset").onclick=()=>{
+  dR.fill(0); dG.fill(0); dB.fill(0);
+  Vx.fill(0); Vy.fill(0);
+};
+
+(function loop(){
+  step();
+  render();
+  requestAnimationFrame(loop);
+})();
