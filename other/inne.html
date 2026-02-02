@@ -56,7 +56,7 @@ canvas {
   text-align:center;
   padding:40px 10px;
 }
-#fluid {
+.border {
   border: 1px solid rgba(255, 255, 255, 0.35);
   border-radius: 12px;
   padding: 16px;
@@ -76,7 +76,7 @@ canvas {
     <h2>Navier–Stokes Fluid Simulation</h2>
     <button id="reset">Reset</button>
   </div>
-  <div class="canvas-wrapper" id="fluid">
+  <div class="canvas-wrapper border">
     <canvas id="canvas"></canvas>
   </div>
 </section>
@@ -84,8 +84,9 @@ canvas {
 <section>
   <div class="sim-header">
     <h2>Mandelbrot Set</h2>
+    <button id="resetMandelbrot">Reset</button>
   </div>
-  <div class="canvas-wrapper">
+  <div class="canvas-wrapper border">
     <canvas id="mandelbrot"></canvas>
   </div>
 </section>
@@ -437,6 +438,14 @@ document.getElementById("reset").onclick=()=>{
 
   canvas.addEventListener("touchend", e => {
     if (e.touches.length < 2) lastTouchDist = 0;
+  });
+
+  const resetButton = document.getElementById("resetMandelbrot");
+  resetButton.addEventListener("click", () => {
+    centerX = -0.5;
+    centerY = 0.0;
+    scale = 3.0;
+    render();
   });
 
   resize();
