@@ -56,6 +56,15 @@ canvas {
   text-align:center;
   padding:40px 10px;
 }
+#fluid {
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 12px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.02);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.05),
+    0 12px 30px rgba(0, 0, 0, 0.6);
+}
 </style>
 </head>
 <body>
@@ -67,7 +76,7 @@ canvas {
     <h2>Navier–Stokes Fluid Simulation</h2>
     <button id="reset">Reset</button>
   </div>
-  <div class="canvas-wrapper">
+  <div class="canvas-wrapper" id="fluid">
     <canvas id="canvas"></canvas>
   </div>
 </section>
