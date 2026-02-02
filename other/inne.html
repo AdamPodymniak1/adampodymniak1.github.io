@@ -91,7 +91,13 @@ canvas {
   </div>
 </section>
 
-<section><h2>Sand Simulation</h2><div class="placeholder">Coming soon.</div></section>
+<section>
+  <h2>Sand Simulation</h2>
+  <div class="canvas-wrapper border">
+    <canvas id="sand"></canvas>
+  </div>
+</section>
+
 <section><h2>Conways Game of Life</h2><div class="placeholder">Coming soon.</div></section>
 <section><h2>Boids</h2><div class="placeholder">Coming soon.</div></section>
 <section><h2>Newtons Fractal</h2><div class="placeholder">Coming soon.</div></section>
@@ -450,6 +456,114 @@ document.getElementById("reset").onclick=()=>{
   });
 
   resize();
+})();
+</script>
+
+<script>
+(() => {
+  const canvas = document.getElementById("sand");
+  const ctx = canvas.getContext("2d");
+
+  const W = 120;
+  const H = 120;
+
+  let grid = new Uint8Array(W * H);
+  let next = new Uint8Array(W * H);
+
+  function idx(x, y) {
+    return x + y * W;
+  }
+
+  function resize() {
+    const r = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = r.width * dpr;
+    canvas.height = r.height * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  window.addEventListener("resize", resize);
+  resize();
+
+  function step() {
+    next.fill(0);
+
+    for (let y = H - 1; y >= 0; y--) {
+      for (let x = 0; x < W; x++) {
+        if (!grid[idx(x, y)]) continue;
+
+        if (y + 1 < H && !grid[idx(x, y + 1)]) {
+          next[idx(x, y + 1)] = 1;
+        }
+        else {
+          const dir = Math.random() < 0.5 ? -1 : 1;
+          if (x + dir >= 0 && x + dir < W &&
+              y + 1 < H &&
+              !grid[idx(x + dir, y + 1)]) {
+            next[idx(x + dir, y + 1)] = 1;
+          } else {
+            next[idx(x, y)] = 1;
+          }
+        }
+      }
+    }
+
+    [grid, next] = [next, grid];
+  }
+
+  function render() {
+    const cw = canvas.clientWidth / W;
+    const ch = canvas.clientHeight / H;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#f5d76e";
+
+    for (let y = 0; y < H; y++) {
+      for (let x = 0; x < W; x++) {
+        if (grid[idx(x, y)]) {
+          ctx.fillRect(x * cw, y * ch, cw, ch);
+        }
+      }
+    }
+  }
+
+  function loop() {
+    step();
+    render();
+    requestAnimationFrame(loop);
+  }
+
+  let drawing = false;
+
+  canvas.addEventListener("pointerdown", e => {
+    drawing = true;
+    addSand(e);
+  });
+
+  canvas.addEventListener("pointerup", () => drawing = false);
+  canvas.addEventListener("pointerleave", () => drawing = false);
+
+  canvas.addEventListener("pointermove", e => {
+    if (drawing) addSand(e);
+  });
+
+  function addSand(e) {
+    const r = canvas.getBoundingClientRect();
+    const x = Math.floor((e.clientX - r.left) / r.width * W);
+    const y = Math.floor((e.clientY - r.top) / r.height * H);
+
+    for (let dx = -2; dx <= 2; dx++) {
+      for (let dy = -2; dy <= 2; dy++) {
+        const nx = x + dx;
+        const ny = y + dy;
+        if (nx >= 0 && nx < W && ny >= 0 && ny < H) {
+          grid[idx(nx, ny)] = 1;
+        }
+      }
+    }
+  }
+
+  loop();
 })();
 </script>
 
