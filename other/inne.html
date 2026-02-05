@@ -132,7 +132,17 @@ select:focus {
 <section>
   <div class="sim-header">
     <h2>Boids</h2>
-    <button id="resetBoids">Reset</button>
+    <div>
+      <input
+        id="boidsCount"
+        type="range"
+        min="10"
+        max="300"
+        value="120"
+        step="10"
+      />
+      <button id="resetBoids">Reset</button>
+    </div>
   </div>
   <div class="canvas-wrapper border">
     <canvas id="boids"></canvas>

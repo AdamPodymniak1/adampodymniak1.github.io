@@ -15,7 +15,7 @@ function resize() {
 window.addEventListener("resize", resize);
 resize();
 
-const BOID_COUNT = Math.min(120, Math.floor((W * H) / 6000));
+let BOID_COUNT = 120;
 const MAX_SPEED = 2.2;
 const MAX_FORCE = 0.05;
 
@@ -40,7 +40,10 @@ function limit(vx, vy, max) {
 
 function resetBoids() {
   boids.length = 0;
-  for (let i = 0; i < BOID_COUNT; i++) {
+
+  const maxBoids = Math.min(BOID_COUNT, 400);
+
+  for (let i = 0; i < maxBoids; i++) {
     boids.push({
       x: Math.random() * W,
       y: Math.random() * H,
@@ -56,15 +59,6 @@ resetBoids();
 const resetBtn = document.getElementById("resetBoids");
 if (resetBtn) {
   resetBtn.onclick = resetBoids;
-}
-
-for (let i = 0; i < BOID_COUNT; i++) {
-  boids.push({
-    x: rand(0, W),
-    y: rand(0, H),
-    vx: rand(-1, 1),
-    vy: rand(-1, 1),
-  });
 }
 
 let pointer = { x: 0, y: 0, active: false };
@@ -83,6 +77,14 @@ boidsCanvas.addEventListener("pointermove", e => {
 
 boidsCanvas.addEventListener("pointerup", () => pointer.active = false);
 boidsCanvas.addEventListener("pointerleave", () => pointer.active = false);
+
+const countSlider = document.getElementById("boidsCount");
+if (countSlider) {
+  countSlider.addEventListener("input", () => {
+    BOID_COUNT = +countSlider.value;
+    resetBoids();
+  });
+}
 
 function step() {
   for (let b of boids) {
