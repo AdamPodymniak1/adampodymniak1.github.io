@@ -1,3 +1,5 @@
+(() => {
+
 const boidsCanvas = document.getElementById("boids");
 const boidsCtx = boidsCanvas.getContext("2d");
 
@@ -181,4 +183,6 @@ function render() {
   step();
   render();
   requestAnimationFrame(loop);
+})();
+
 })();
