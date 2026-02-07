@@ -183,7 +183,19 @@ input[type="range"]::-moz-range-track {
   </div>
 </section>
 
-<section><h2>Conways Game of Life</h2><div class="placeholder">Coming soon.</div></section>
+<section>
+  <div class="sim-header">
+    <h2>Conway's Game of Life</h2>
+    <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+      <button id="playPauseLife">Stop</button>
+      <button id="resetLife">Clear</button>
+      <input id="lifeSpeed" type="range" min="1" max="60" value="30" title="Speed" />
+    </div>
+  </div>
+  <div class="canvas-wrapper border">
+    <canvas id="life"></canvas>
+  </div>
+</section>
 <section><h2>Newtons Fractal</h2><div class="placeholder">Coming soon.</div></section>
 
 </main>
@@ -192,6 +204,7 @@ input[type="range"]::-moz-range-track {
 <script src="mandelbrot.js"></script>
 <script src="sand.js"></script>
 <script src="boids.js"></script>
+<script src="life.js"></script>
 
 </body>
 </html>
