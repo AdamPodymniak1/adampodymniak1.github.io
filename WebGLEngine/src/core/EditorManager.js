@@ -221,6 +221,7 @@ export class EditorManager {
             toggleEditorBtn.addEventListener('click', () => {
                 const editor = document.getElementById('editor');
                 editor.classList.toggle('open');
+                toggleEditorBtn.textContent = editor.classList.contains('open') ? 'Close' : 'Editor';
             });
         }
         

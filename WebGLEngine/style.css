@@ -41,19 +41,35 @@ body {
 
 .editor-toggle {
     position: fixed;
-    z-index: 999;
-    background: rgba(30, 30, 30, 0.9);
-    color: white;
-    border: none;
-    border-radius: 5px;
+    top: 20px;
+    right: 20px;
+    width: auto;
+    height: 42px;
+    padding: 0 16px;
+    z-index: 1001;
+    background: rgba(30, 30, 30, 0.95);
+    color: #64b5f6;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
     cursor: pointer;
     font-size: 14px;
+    font-weight: 500;
     backdrop-filter: blur(10px);
-    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+#editor.open + .editor-toggle,
+#editor.open #toggleEditor,
+.editor-toggle.shifted {
+    right: 370px;
 }
 
 .editor-toggle:hover {
-    background: rgba(50, 50, 50, 0.9);
+    background: rgba(50, 50, 50, 0.95);
+    color: #fff;
 }
 
 .editor-section {
@@ -89,8 +105,6 @@ select {
     border-radius: 4px;
     color: white;
     font-size: 14px;
-    -webkit-appearance: none;
-    -moz-appearance: none;
     appearance: none;
     background-image: url('data:image/svg+xml;utf8,<svg fill="white" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
     background-repeat: no-repeat;
@@ -101,15 +115,6 @@ select {
 select option {
     background: #1e1e1e;
     color: white;
-}
-
-select:-moz-focusring {
-    color: transparent;
-    text-shadow: 0 0 0 white;
-}
-
-select::-ms-expand {
-    display: none;
 }
 
 input[type="range"],
@@ -129,10 +134,11 @@ input[type="range"] {
     background: rgba(255, 255, 255, 0.1);
     border-radius: 3px;
     border: none;
+    appearance: none;
 }
 
 input[type="range"]::-webkit-slider-thumb {
-    -webkit-appearance: none;
+    appearance: none;
     width: 18px;
     height: 18px;
     background: #64b5f6;
@@ -232,10 +238,6 @@ button:hover {
     justify-content: space-between;
 }
 
-.toggle-switch label {
-    margin-bottom: 0;
-}
-
 .toggle-switch input[type="checkbox"] {
     width: 50px;
     height: 24px;
@@ -279,19 +281,6 @@ button:hover {
     border-radius: 4px;
 }
 
-::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.3);
-}
-
-@media (max-width: 768px) {
-    #editor {
-        width: 85vw;
-    }
-
-    .editor-toggle {
-        display: none;
-    }
-}
 #editor-swipe-indicator {
     position: fixed;
     top: 50%;
@@ -331,16 +320,6 @@ button:hover {
     100% { transform: translateX(0); }
 }
 
-@media (min-width: 769px) {
-    #editor-swipe-indicator {
-        display: none;
-    }
-}
-
-#editor.open ~ #editor-swipe-indicator {
-    display: none;
-}
-
 #mobile-controls {
     position: fixed;
     inset: 0;
@@ -375,10 +354,6 @@ button:hover {
     touch-action: none;
 }
 
-.pad button:active {
-    background: rgba(100, 181, 246, 0.45);
-}
-
 .pad.left {
     bottom: clamp(16px, 4vw, 28px);
     left: clamp(16px, 4vw, 28px);
@@ -392,18 +367,6 @@ button:hover {
 .pad.vertical {
     bottom: clamp(16px, 4vw, 28px);
     right: clamp(110px, 25vw, 160px);
-}
-
-@media (orientation: landscape) {
-    .pad.vertical {
-        right: clamp(90px, 20vw, 140px);
-    }
-}
-
-@media (min-width: 769px) {
-    #mobile-controls {
-        display: none;
-    }
 }
 
 #loading-screen {
@@ -428,13 +391,6 @@ button:hover {
     align-items: center;
     gap: 14px;
     color: #fff;
-    font-family: system-ui, sans-serif;
-    letter-spacing: 2px;
-}
-
-#loading-screen .text {
-    font-size: clamp(14px, 4vw, 18px);
-    opacity: 0.85;
 }
 
 .spinner {
@@ -448,4 +404,58 @@ button:hover {
 
 @keyframes spin {
     to { transform: rotate(360deg); }
+}
+
+.back-home-btn {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 1001;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: rgba(30, 30, 30, 0.85);
+    backdrop-filter: blur(10px);
+    color: #64b5f6;
+    text-decoration: none;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.back-home-btn:hover {
+    background: rgba(100, 181, 246, 0.2);
+    border-color: #64b5f6;
+    transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+    #editor {
+        width: 85vw;
+    }
+    .editor-toggle {
+        display: none;
+    }
+    .back-home-btn {
+        top: 15px;
+        left: 15px;
+        padding: 12px;
+    }
+    .back-text {
+        display: none;
+    }
+}
+
+@media (min-width: 769px) {
+    #editor-swipe-indicator, #mobile-controls {
+        display: none;
+    }
+}
+
+#editor.open ~ #editor-swipe-indicator {
+    display: none;
 }
