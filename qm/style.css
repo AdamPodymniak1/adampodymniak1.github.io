@@ -292,3 +292,63 @@ canvas {
         text-align: center;
     }
 }
+
+.header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.back-home {
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+    background: rgba(31, 162, 198, 0.15);
+    color: #19a7ce;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 500;
+    border: 1px solid rgba(25, 167, 206, 0.3);
+    transition: all 0.2s ease;
+}
+
+.back-home:hover {
+    background: #19a7ce;
+    color: #071029;
+}
+
+.back-home .icon {
+    margin-right: 6px;
+    font-size: 18px;
+    line-height: 0;
+}
+
+.header-spacer {
+    width: 80px;
+}
+
+@media (max-width: 767px) {
+    .header-content {
+        justify-content: flex-start;
+        gap: 12px;
+    }
+
+    .back-home {
+        padding: 8px 12px;
+    }
+
+    .back-home .text {
+        display: none;
+    }
+    
+    .back-home .text {
+        display: inline;
+    }
+
+    .header-spacer {
+        display: none;
+    }
+}
