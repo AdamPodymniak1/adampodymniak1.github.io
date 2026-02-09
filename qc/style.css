@@ -795,3 +795,17 @@ header {
     width: 52px;
   }
 }
+
+.back-home {
+  text-decoration: none;
+  padding: 8px 16px;
+  font-size: 14px;
+  line-height: 1;
+}
+
+@media (max-width: 900px) {
+  .back-home {
+    padding: 10px 18px;
+    font-size: 16px;
+  }
+}
